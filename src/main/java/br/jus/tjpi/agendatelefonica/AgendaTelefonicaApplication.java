@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AgendaTelefonicaApplication {
 
 	public static void main(String[] args) {
+		PostgresDockerBootstrap.startIfNeeded();
 		SpringApplication.run(AgendaTelefonicaApplication.class, args);
 	}
 
