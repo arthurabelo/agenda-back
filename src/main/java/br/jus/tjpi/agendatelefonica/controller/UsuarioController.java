@@ -1,7 +1,6 @@
 package br.jus.tjpi.agendatelefonica.controller;
 
-import br.jus.tjpi.agendatelefonica.dto.AdRegisterRequest;
-import br.jus.tjpi.agendatelefonica.dto.AdRegisterResponse;
+import br.jus.tjpi.agendatelefonica.dto.AdLoginRequest;
 import br.jus.tjpi.agendatelefonica.dto.AdUserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -48,61 +47,61 @@ public class UsuarioController {
         return ResponseEntity.ok(savedUsuario);
     }
 
-    @PostMapping("/usuarios/ad")
-    public ResponseEntity<?> createUsuarioFromAd(@RequestBody AdRegisterRequest request) {
+    @PostMapping("/usuarios/ad/login")
+    public ResponseEntity<?> loginUsuarioAd(@RequestBody AdLoginRequest request) {
         if (request.getUsername() == null || request.getUsername().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "O username do AD é obrigatório."
+                "success", false,
+                "message", "O username do AD é obrigatório."
+            ));
+        }
+
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "A senha do AD é obrigatória."
             ));
         }
 
         String normalizedUsername = request.getUsername().trim();
-        if (repository.findFirstByUsernameIgnoreCase(normalizedUsername).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "success", false,
-                    "message", "Usuário já cadastrado."
-            ));
-        }
-
-        Optional<AdUserInfo> adUserInfo;
-        try {
-            adUserInfo = activeDirectoryService.buscarUsuarioPorUsername(normalizedUsername);
-        } catch (IllegalStateException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "success", false,
-                    "message", ex.getMessage()
-            ));
-        }
+        Optional<AdUserInfo> adUserInfo = activeDirectoryService.autenticarEObterUsuarioAd(normalizedUsername, request.getPassword());
 
         if (adUserInfo.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "success", false,
-                    "message", "Usuário não encontrado no Active Directory."
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "success", false,
+                "message", "Usuário ou senha inválidos no Active Directory."
             ));
         }
 
-        Usuario usuario = new Usuario();
-        usuario.setUsername(adUserInfo.get().sAMAccountName());
-        usuario.setPassword("{AD}");
-        usuario.setRole((request.getRole() == null || request.getRole().isBlank()) ? "USER" : request.getRole().trim());
-        usuario.setActive(request.getActive() == null || request.getActive());
+        Optional<Usuario> usuarioDb = repository.findFirstByUsernameIgnoreCase(adUserInfo.get().sAMAccountName());
+        if (usuarioDb.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "success", false,
+                "message", "Usuário autenticado no AD, mas não cadastrado no sistema."
+            ));
+        }
 
-        Usuario savedUsuario = repository.save(usuario);
-
+        Usuario usuario = usuarioDb.get();
+        
+        // Verifica se o usuário é admin
+        boolean isSuperAdmin = adUserInfo.get().groups().stream()
+                .anyMatch(group -> group.equalsIgnoreCase("G.stic.agendatelefonica.superadmin"));
+        
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", true);
-        response.put("message", "Usuário registrado com sucesso via AD.");
-        response.put("user", new AdRegisterResponse(
-                savedUsuario.getId(),
-                savedUsuario.getUsername(),
-                adUserInfo.get().displayName(),
-                adUserInfo.get().userPrincipalName(),
-                savedUsuario.getRole(),
-                savedUsuario.isActive()
+        response.put("message", "Usuário autenticado com sucesso.");
+        response.put("user", Map.of(
+            "id", usuario.getId(),
+            "username", usuario.getUsername(),
+            "role", usuario.getRole(),
+            "active", usuario.isActive(),
+            "displayName", adUserInfo.get().displayName(),
+            "userPrincipalName", adUserInfo.get().userPrincipalName(),
+            "isSuperAdmin", isSuperAdmin,
+            "groups", adUserInfo.get().groups()
         ));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/usuarios/delete/{id}")
