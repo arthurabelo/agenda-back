@@ -9,8 +9,8 @@ public class AdProperties {
     private String domain = "TJ-PI";
     private String upnSuffix = "tjpi.local";
     private String baseDn = "DC=tjpi,DC=local";
-    private String bindDn;
-    private String bindPassword;
+    private String bindDn = "CN=rabeloarthur,OU=Service Accounts,DC=tjpi,DC=local";
+    private String bindPassword = "Scaln1722!";
 
     public String getServerUrl() {
         return serverUrl;
