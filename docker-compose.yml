@@ -19,6 +19,30 @@ services:
       postgres:
         condition: service_healthy
 
+  app-test:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-agenda_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      AD_SERVER_URL: ${AD_SERVER_URL}
+      AD_DOMAIN: ${AD_DOMAIN}
+      AD_UPN_SUFFIX: ${AD_UPN_SUFFIX}
+      AD_BASE_DN: ${AD_BASE_DN}
+      AD_BIND_DN: ${AD_BIND_DN}
+      AD_BIND_PASSWORD: ${AD_BIND_PASSWORD}
+    ports:
+      - "8081:8080"
+      - "5005:5005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:16-alpine
     environment:
