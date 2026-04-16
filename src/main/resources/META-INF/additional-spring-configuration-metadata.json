@@ -21,14 +21,9 @@
       "description": "AD base DN, e.g. DC=tjpi,DC=local"
     },
     {
-      "name": "ad.bind-dn",
+      "name": "ad.login-group",
       "type": "java.lang.String",
-      "description": "Bind DN for service account used to search users in AD"
-    },
-    {
-      "name": "ad.bind-password",
-      "type": "java.lang.String",
-      "description": "Bind password for the AD service account"
+      "description": "AD group required for application login"
     }
   ]
 }

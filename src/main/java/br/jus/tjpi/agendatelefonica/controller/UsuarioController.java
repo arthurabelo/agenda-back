@@ -1,21 +1,18 @@
 package br.jus.tjpi.agendatelefonica.controller;
 
-import br.jus.tjpi.agendatelefonica.dto.AdLoginRequest;
-import br.jus.tjpi.agendatelefonica.dto.AdUserInfo;
+import br.jus.tjpi.agendatelefonica.dto.LoginRequest;
+import br.jus.tjpi.agendatelefonica.dto.LoginResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import br.jus.tjpi.agendatelefonica.model.Usuario;
 import br.jus.tjpi.agendatelefonica.repository.UsuarioRepository;
-import br.jus.tjpi.agendatelefonica.service.ActiveDirectoryService;
+import br.jus.tjpi.agendatelefonica.service.LoginService;
 
 @RestController
 public class UsuarioController {
@@ -23,7 +20,7 @@ public class UsuarioController {
     private UsuarioRepository repository;
 
     @Autowired
-    private ActiveDirectoryService activeDirectoryService;
+    private LoginService loginService;
 
     @GetMapping("/usuarios")
     public ResponseEntity<List<Usuario>> getUsuarios() {
@@ -45,63 +42,6 @@ public class UsuarioController {
         }
         Usuario savedUsuario = repository.save(usuario);
         return ResponseEntity.ok(savedUsuario);
-    }
-
-    @PostMapping("/usuarios/ad/login")
-    public ResponseEntity<?> loginUsuarioAd(@RequestBody AdLoginRequest request) {
-        if (request.getUsername() == null || request.getUsername().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "O username do AD é obrigatório."
-            ));
-        }
-
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "A senha do AD é obrigatória."
-            ));
-        }
-
-        String normalizedUsername = request.getUsername().trim();
-        Optional<AdUserInfo> adUserInfo = activeDirectoryService.autenticarEObterUsuarioAd(normalizedUsername, request.getPassword());
-
-        if (adUserInfo.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "success", false,
-                "message", "Usuário ou senha inválidos no Active Directory."
-            ));
-        }
-
-        Optional<Usuario> usuarioDb = repository.findFirstByUsernameIgnoreCase(adUserInfo.get().sAMAccountName());
-        if (usuarioDb.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                "success", false,
-                "message", "Usuário autenticado no AD, mas não cadastrado no sistema."
-            ));
-        }
-
-        Usuario usuario = usuarioDb.get();
-        
-        // Verifica se o usuário é admin
-        boolean isSuperAdmin = adUserInfo.get().groups().stream()
-                .anyMatch(group -> group.equalsIgnoreCase("G.stic.agendatelefonica.superadmin"));
-        
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("success", true);
-        response.put("message", "Usuário autenticado com sucesso.");
-        response.put("user", Map.of(
-            "id", usuario.getId(),
-            "username", usuario.getUsername(),
-            "role", usuario.getRole(),
-            "active", usuario.isActive(),
-            "displayName", adUserInfo.get().displayName(),
-            "userPrincipalName", adUserInfo.get().userPrincipalName(),
-            "isSuperAdmin", isSuperAdmin,
-            "groups", adUserInfo.get().groups()
-        ));
-
-        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/usuarios/delete/{id}")
@@ -130,6 +70,18 @@ public class UsuarioController {
     @GetMapping("/usuarios/search")
     public ResponseEntity<List<Usuario>> searchUsuarios(@RequestParam String username) {
         return ResponseEntity.ok(repository.findByUsername(username));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        Usuario usuario = loginService.autenticarOuFalhar(request.username(), request.password());
+        LoginResponse response = new LoginResponse(
+                usuario.getId(),
+                usuario.getUsername(),
+                usuario.getRole(),
+                usuario.isActive()
+        );
+        return ResponseEntity.ok(response);
     }
 
 }

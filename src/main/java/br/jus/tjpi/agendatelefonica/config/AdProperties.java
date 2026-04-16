@@ -5,12 +5,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ad")
 public class AdProperties {
 
-    private String serverUrl = "ldap://SUECIA.tjpi.local:389";
-    private String domain = "TJ-PI";
-    private String upnSuffix = "tjpi.local";
-    private String baseDn = "DC=tjpi,DC=local";
-    private String bindDn = "CN=rabeloarthur,OU=Service Accounts,DC=tjpi,DC=local";
-    private String bindPassword = "Scaln1722!";
+    private String serverUrl;
+    private String domain;
+    private String upnSuffix;
+    private String baseDn;
+    private String loginGroup;
 
     public String getServerUrl() {
         return serverUrl;
@@ -44,19 +43,11 @@ public class AdProperties {
         this.baseDn = baseDn;
     }
 
-    public String getBindDn() {
-        return bindDn;
+    public String getLoginGroup() {
+        return loginGroup;
     }
 
-    public void setBindDn(String bindDn) {
-        this.bindDn = bindDn;
-    }
-
-    public String getBindPassword() {
-        return bindPassword;
-    }
-
-    public void setBindPassword(String bindPassword) {
-        this.bindPassword = bindPassword;
+    public void setLoginGroup(String loginGroup) {
+        this.loginGroup = loginGroup;
     }
 }
