@@ -38,12 +38,20 @@ public class LoginService {
 
         Optional<Usuario> localUser = usuarioRepository.findFirstByUsernameIgnoreCase(normalizedUsername);
         if (localUser.isPresent()) {
+            if (localUser.get().isAdUser()) {
+                return authenticateAdAndUpsertUser(normalizedUsername, password);
+            }
+
             if (!password.equals(localUser.get().getPassword())) {
                 throw new InvalidPasswordException("Senha incorreta.");
             }
             return localUser.get();
         }
 
+        return authenticateAdAndUpsertUser(normalizedUsername, password);
+    }
+
+    private Usuario authenticateAdAndUpsertUser(String normalizedUsername, String password) {
         String loginGroup = adProperties.getLoginGroup();
         if (loginGroup == null || loginGroup.isBlank()) {
             throw new AuthConfigurationException("Configuração inválida: AD_LOGIN_GROUP não definido.");
@@ -60,11 +68,32 @@ public class LoginService {
             throw new UserNotInGroupException("Usuário autenticado no AD, mas não pertence ao grupo permitido.");
         }
 
+        String realAdUsername = resolveAdUsername(adUserInfo.get(), normalizedUsername);
+
+        Optional<Usuario> existingByRealUsername = usuarioRepository.findFirstByUsernameIgnoreCase(realAdUsername);
+        if (existingByRealUsername.isPresent()) {
+            return existingByRealUsername.get();
+        }
+
         Usuario adUser = new Usuario();
-        adUser.setUsername(normalizedUsername);
+        adUser.setUsername(realAdUsername);
+        adUser.setPassword(null);
         adUser.setRole(DEFAULT_AD_ROLE);
         adUser.setActive(true);
-        return adUser;
+        adUser.setAdUser(true);
+        return usuarioRepository.save(adUser);
+    }
+
+    private String resolveAdUsername(AdUserInfo adUserInfo, String fallbackUsername) {
+        if (adUserInfo.sAMAccountName() != null && !adUserInfo.sAMAccountName().isBlank()) {
+            return adUserInfo.sAMAccountName().trim();
+        }
+        if (adUserInfo.userPrincipalName() != null && !adUserInfo.userPrincipalName().isBlank()) {
+            String upn = adUserInfo.userPrincipalName().trim();
+            int separator = upn.indexOf('@');
+            return separator > 0 ? upn.substring(0, separator) : upn;
+        }
+        return fallbackUsername;
     }
 
     private void validateAdConfiguration() {

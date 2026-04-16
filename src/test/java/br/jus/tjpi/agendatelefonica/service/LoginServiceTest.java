@@ -20,6 +20,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,18 +71,74 @@ class LoginServiceTest {
 
     @Test
     void autenticarOuFalharDeveRetornarUsuarioAdQuandoNaoExisteNoBancoEGrupoConfere() {
-        AdUserInfo adUserInfo = new AdUserInfo("Usuário Teste", TEST_USERNAME, TEST_USERNAME + "@ad.local", List.of(TEST_GROUP));
+        AdUserInfo adUserInfo = new AdUserInfo("Usuário Teste", "usuario_real_ad", TEST_USERNAME + "@ad.local", List.of(TEST_GROUP));
 
         when(usuarioRepository.findFirstByUsernameIgnoreCase(TEST_USERNAME)).thenReturn(Optional.empty());
+        when(usuarioRepository.findFirstByUsernameIgnoreCase("usuario_real_ad")).thenReturn(Optional.empty());
         when(activeDirectoryService.autenticarEObterUsuarioAd(TEST_USERNAME, TEST_PASSWORD)).thenReturn(Optional.of(adUserInfo));
         when(activeDirectoryService.usuarioPertenceAoGrupo(adUserInfo, TEST_GROUP))
                 .thenReturn(true);
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Usuario result = loginService.autenticarOuFalhar(TEST_USERNAME, TEST_PASSWORD);
 
-        assertEquals(TEST_USERNAME, result.getUsername());
+        assertEquals("usuario_real_ad", result.getUsername());
         assertEquals("USER", result.getRole());
         assertTrue(result.isActive());
+        assertTrue(result.isAdUser());
+        assertNull(result.getPassword());
+    }
+
+    @Test
+    void autenticarOuFalharDeveAtualizarUsuarioAdExistenteComUsernameReal() {
+        AdUserInfo adUserInfo = new AdUserInfo("Usuário Teste", "usuario_real_ad", TEST_USERNAME + "@ad.local", List.of(TEST_GROUP));
+
+        Usuario usuarioAdExistente = new Usuario();
+        usuarioAdExistente.setId(20L);
+        usuarioAdExistente.setUsername("usuario_real_ad");
+        usuarioAdExistente.setAdUser(true);
+        usuarioAdExistente.setRole("OLD");
+        usuarioAdExistente.setActive(false);
+        usuarioAdExistente.setPassword("antiga");
+
+        when(usuarioRepository.findFirstByUsernameIgnoreCase(TEST_USERNAME)).thenReturn(Optional.empty());
+        when(usuarioRepository.findFirstByUsernameIgnoreCase("usuario_real_ad")).thenReturn(Optional.of(usuarioAdExistente));
+        when(activeDirectoryService.autenticarEObterUsuarioAd(TEST_USERNAME, TEST_PASSWORD)).thenReturn(Optional.of(adUserInfo));
+        when(activeDirectoryService.usuarioPertenceAoGrupo(adUserInfo, TEST_GROUP)).thenReturn(true);
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Usuario result = loginService.autenticarOuFalhar(TEST_USERNAME, TEST_PASSWORD);
+
+        assertEquals(20L, result.getId());
+        assertEquals("usuario_real_ad", result.getUsername());
+        assertEquals("USER", result.getRole());
+        assertTrue(result.isActive());
+        assertTrue(result.isAdUser());
+        assertNull(result.getPassword());
+    }
+
+    @Test
+    void autenticarOuFalharDeveReaproveitarUsuarioExistenteQuandoUsernameRealDoAdJaExistir() {
+        AdUserInfo adUserInfo = new AdUserInfo("Usuário Teste", "usuario_real_ad", TEST_USERNAME + "@ad.local", List.of(TEST_GROUP));
+
+        Usuario usuarioLocalExistente = new Usuario();
+        usuarioLocalExistente.setId(30L);
+        usuarioLocalExistente.setUsername("usuario_real_ad");
+        usuarioLocalExistente.setAdUser(false);
+        usuarioLocalExistente.setPassword("local123");
+        usuarioLocalExistente.setRole("USER");
+        usuarioLocalExistente.setActive(true);
+
+        when(usuarioRepository.findFirstByUsernameIgnoreCase(TEST_USERNAME)).thenReturn(Optional.empty());
+        when(usuarioRepository.findFirstByUsernameIgnoreCase("usuario_real_ad")).thenReturn(Optional.of(usuarioLocalExistente));
+        when(activeDirectoryService.autenticarEObterUsuarioAd(TEST_USERNAME, TEST_PASSWORD)).thenReturn(Optional.of(adUserInfo));
+        when(activeDirectoryService.usuarioPertenceAoGrupo(adUserInfo, TEST_GROUP)).thenReturn(true);
+
+        Usuario result = loginService.autenticarOuFalhar(TEST_USERNAME, TEST_PASSWORD);
+
+        assertEquals(30L, result.getId());
+        assertEquals("usuario_real_ad", result.getUsername());
+        verify(usuarioRepository, never()).save(any(Usuario.class));
     }
 
     @Test

@@ -16,7 +16,7 @@ public class Usuario {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
@@ -25,4 +25,7 @@ public class Usuario {
 
     @Column(nullable = false)
     private boolean active;
+
+    @Column(name = "ad_user", nullable = false, columnDefinition = "boolean default false")
+    private boolean adUser = false;
 }
