@@ -15,6 +15,7 @@ import br.jus.tjpi.agendatelefonica.repository.UsuarioRepository;
 import br.jus.tjpi.agendatelefonica.service.LoginService;
 
 @RestController
+@RequestMapping("/api")
 public class UsuarioController {
     @Autowired
     private UsuarioRepository repository;

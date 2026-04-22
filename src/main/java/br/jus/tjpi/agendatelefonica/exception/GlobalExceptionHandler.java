@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthConfigurationException.class)
     public ResponseEntity<ApiErrorResponse> handleAuthConfiguration(AuthConfigurationException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

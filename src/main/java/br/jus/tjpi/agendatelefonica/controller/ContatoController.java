@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 
 @RestController
+@RequestMapping("/api")
 public class ContatoController {
     @Autowired // Injects the ContatoRepository dependency
     private ContatoRepository repository;

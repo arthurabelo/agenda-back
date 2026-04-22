@@ -16,6 +16,7 @@ import java.util.Optional;
 public class LoginService {
 
     private static final String DEFAULT_AD_ROLE = "USER";
+    private static final String AD_PASSWORD_PLACEHOLDER = "{AD_AUTH}";
 
     private final UsuarioRepository usuarioRepository;
     private final ActiveDirectoryService activeDirectoryService;
@@ -77,7 +78,8 @@ public class LoginService {
 
         Usuario adUser = new Usuario();
         adUser.setUsername(realAdUsername);
-        adUser.setPassword(null);
+        // Keep a non-null password to satisfy legacy NOT NULL constraints for AD-backed users.
+        adUser.setPassword(AD_PASSWORD_PLACEHOLDER);
         adUser.setRole(DEFAULT_AD_ROLE);
         adUser.setActive(true);
         adUser.setAdUser(true);
