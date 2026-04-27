@@ -4,7 +4,7 @@ metadata:
   name: agenda-back
   namespace: app-agenda
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: agenda-back
@@ -13,9 +13,14 @@ spec:
       labels:
         app: agenda-back
     spec:
+      imagePullSecrets:
+        - name: gitlab-registry-secret
+
       containers:
         - name: agenda-back
-          image: registry.gitlab.com/SEU_GRUPO/agenda-back:latest
+          image: gitlab.tjpi.jus.br:5050/infraestrutura/agenda-back:latest
+          imagePullPolicy: Always
+
           ports:
             - containerPort: 8080
 
@@ -27,22 +32,25 @@ spec:
 
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
+              cpu: "200m"
               memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
 
-          livenessProbe:
+          # 🔹 Melhor para Spring Boot moderno
+          readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
+            failureThreshold: 3
 
-          readinessProbe:
+          livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
