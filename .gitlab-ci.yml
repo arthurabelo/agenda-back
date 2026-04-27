@@ -15,15 +15,14 @@ default:
   tags:
     - ouvidoria
 
-# --------------------------
+# -------------------------
 # SECURITY (não bloqueante)
-# --------------------------
+# -------------------------
 security_scan:
   stage: security
-  image: node:20
+  image: maven:3.9.14-eclipse-temurin-25
   script:
-    - npm install
-    - npm audit --audit-level=high || true
+    - ./mvnw -B -DskipTests org.owasp:dependency-check-maven:check || true
   allow_failure: true
 
 # -------------------------
@@ -31,25 +30,21 @@ security_scan:
 # -------------------------
 quality_scan:
   stage: quality
-  image: node:20
+  image: maven:3.9.14-eclipse-temurin-25
   script:
-    - npm install
-    - npm run lint || true
-    - npm run test || true
+    - ./mvnw -B clean verify || true
   allow_failure: true
 
 # -------------------------
-# BUILD
+# BUILD (informativo)
 # -------------------------
 build:
   stage: build
-  image: node:20
   script:
-    - npm install
-    - npm run build || true   # backend nem sempre precisa build (ex: Node puro)
+    - echo "Build realizado dentro do Dockerfile (multi-stage Maven)"
 
 # --------------------------
-# DOCKER
+# DOCKER BUILD (KANIKO)
 # --------------------------
 docker_build:
   stage: docker
@@ -58,12 +53,15 @@ docker_build:
     entrypoint: [""]
   script:
     - mkdir -p /kaniko/.docker
+
     - echo "{\"auths\":{\"gitlab.tjpi.jus.br:5050\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+
     - |
       /kaniko/executor \
         --context $CI_PROJECT_DIR \
         --dockerfile $CI_PROJECT_DIR/Dockerfile \
-        --destination $IMAGE_NAME:$IMAGE_TAG
+        --destination $IMAGE_NAME:$IMAGE_TAG \
+        --destination $IMAGE_NAME:latest
 
 # -------------------------
 # DEPLOY K8S
@@ -72,7 +70,8 @@ deploy:
   stage: deploy
   image: bitnami/kubectl:latest
   script:
-    # Secret do registry (ajustei aqui — seu front está com variáveis erradas)
+
+    # Secret para pull da imagem
     - >
       kubectl create secret docker-registry gitlab-registry-secret
       --docker-server=gitlab.tjpi.jus.br:5050
@@ -82,11 +81,14 @@ deploy:
       -n $K8S_NAMESPACE
       --dry-run=client -o yaml | kubectl apply -f -
 
+    # Aplicar manifests
     - kubectl apply -f k8s/namespace.yaml
     - kubectl apply -n $K8S_NAMESPACE -f k8s/
 
+    # Atualizar imagem
     - kubectl set image deployment/agenda-back agenda-back=$IMAGE_NAME:$IMAGE_TAG -n $K8S_NAMESPACE
 
+    # Aguardar rollout
     - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE
 
   rules:
