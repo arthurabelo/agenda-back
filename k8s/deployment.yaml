@@ -29,7 +29,7 @@ spec:
               value: k8s
 
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+              value: jdbc:postgresql://postgres:5432/agenda_db
 
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
