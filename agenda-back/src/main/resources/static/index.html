@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda Telefonica - TJPI</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top-nav">
+    <div class="brand">Agenda Telefonica - TJPI</div>
+    <div class="auth-actions">
+      <button id="loginOpenBtn" class="ghost" type="button">Entrar</button>
+      <button id="logoutBtn" class="ghost hidden" type="button">Sair do Admin</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="page-title-wrap">
+      <h1>Agenda Telefonica - TJPI</h1>
+      <p class="subtitle">Consulta publica de ramais e setores</p>
+    </section>
+
+    <section id="loginCard" class="card login-card hidden">
+      <div class="login-head center">
+        <h2>TJPI</h2>
+        <button id="closeLoginBtn" class="ghost" type="button">Fechar</button>
+      </div>
+      <p class="login-subtitle">Acesso Administrativo</p>
+      <form id="loginForm" class="stack">
+        <label>
+          Usuario
+          <input id="username" name="username" type="text" autocomplete="username" required>
+        </label>
+        <label>
+          Senha
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button id="loginBtn" type="submit">ENTRAR</button>
+      </form>
+      <p id="loginError" class="error hidden" role="alert"></p>
+    </section>
+
+    <section id="appCard" class="card app-card">
+      <div class="toolbar">
+        <div>
+          <h2>Contatos</h2>
+          <p id="welcome" class="hint"></p>
+        </div>
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="Pesquisar setor, telefone ou local">
+          <select id="pageSizeSelect" title="Registros por pagina">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
+      <p id="appError" class="error hidden" role="alert"></p>
+
+      <section id="editPanel" class="edit-panel hidden">
+        <h3 id="editTitle">Dados do Setor</h3>
+        <form id="contactForm" class="edit-grid">
+          <input type="hidden" id="contactId">
+          <label>
+            Nome do Setor
+            <input id="setorInput" type="text" required>
+          </label>
+          <label>
+            Telefone
+            <input id="telefoneInput" type="text" required>
+          </label>
+          <label>
+            Local
+            <input id="localInput" type="text" required>
+          </label>
+          <div class="edit-actions">
+            <button id="saveContactBtn" type="submit">SALVAR ALTERACAO</button>
+            <button id="cancelEditBtn" class="ghost" type="button">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Setor</th>
+              <th>Telefone</th>
+              <th>Local</th>
+              <th id="actionsHeader" class="hidden">Acoes</th>
+            </tr>
+          </thead>
+          <tbody id="contactsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="footerbar">
+        <p id="counter" class="hint"></p>
+        <div class="pagination">
+          <button id="prevBtn" type="button" class="ghost">Anterior</button>
+          <span id="pageInfo"></span>
+          <button id="nextBtn" type="button" class="ghost">Proxima</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

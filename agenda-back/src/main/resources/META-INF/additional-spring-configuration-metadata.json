@@ -1,0 +1,29 @@
+{
+  "properties": [
+    {
+      "name": "ad.server.url",
+      "type": "java.lang.String",
+      "description": "LDAP/AD server URL, e.g. ldap://host:389"
+    },
+    {
+      "name": "ad.domain",
+      "type": "java.lang.String",
+      "description": "AD NetBIOS domain, e.g. TJ-PI"
+    },
+    {
+      "name": "ad.upn-suffix",
+      "type": "java.lang.String",
+      "description": "AD UPN suffix, e.g. tjpi.local"
+    },
+    {
+      "name": "ad.base-dn",
+      "type": "java.lang.String",
+      "description": "AD base DN, e.g. DC=tjpi,DC=local"
+    },
+    {
+      "name": "ad.login-group",
+      "type": "java.lang.String",
+      "description": "AD group required for application login"
+    }
+  ]
+}
