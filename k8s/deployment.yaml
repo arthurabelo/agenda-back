@@ -25,8 +25,8 @@ spec:
             - containerPort: 8080
 
           envFrom:
-            - configMapRef:
-                name: agenda-back-config
+            #- configMapRef:
+                #name: agenda-back-config
             - secretRef:
                 name: agenda-back-secret
 
