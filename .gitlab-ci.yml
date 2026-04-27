@@ -84,14 +84,23 @@ deploy:
       -n $K8S_NAMESPACE
       --dry-run=client -o yaml | kubectl apply -f -
 
-    # Aplicar TODOS os manifests (inclui seu secret.yaml)
-    - kubectl apply -n $K8S_NAMESPACE -f k8s/
+    # 🔥 Aplicar secrets com envsubst (ANTES de tudo)
+    - envsubst < k8s/postgres-secret.yaml | kubectl apply -n $K8S_NAMESPACE -f -
+    #- envsubst < k8s/agenda-back-secret.yaml | kubectl apply -n $K8S_NAMESPACE -f -
+
+    # 🔹 Aplicar resto (SEM secrets)
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/postgres-pvc.yaml
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/postgres-deployment.yaml
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/postgres-service.yaml
+
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/agenda-back-deployment.yaml
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/service.yaml
 
     # Atualizar imagem
     - kubectl set image deployment/agenda-back agenda-back=$IMAGE_NAME:$IMAGE_TAG -n $K8S_NAMESPACE
 
     # Aguardar rollout
-    - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE --timeout=120s
+    - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE --timeout=180s
 
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
