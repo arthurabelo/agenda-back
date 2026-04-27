@@ -71,10 +71,10 @@ deploy:
   image: bitnami/kubectl:latest
   script:
 
-    # Criar namespace (idempotente)
-    - kubectl apply -f k8s/namespace.yaml
+    # Namespace
+    - kubectl get ns $K8S_NAMESPACE || kubectl create ns $K8S_NAMESPACE
 
-    # Secret do registry (pull da imagem)
+    # Secret do registry
     - >
       kubectl create secret docker-registry gitlab-registry-secret
       --docker-server=gitlab.tjpi.jus.br:5050
@@ -84,21 +84,14 @@ deploy:
       -n $K8S_NAMESPACE
       --dry-run=client -o yaml | kubectl apply -f -
 
-    # 🔥 Secret da aplicação (vindos do GitLab CI/CD Variables)
-    - >
-      kubectl create secret generic agenda-back-secret
-      --from-literal=POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
-      -n $K8S_NAMESPACE
-      --dry-run=client -o yaml | kubectl apply -f -
-
-    # Aplicar manifests (configmap, deployment, service)
+    # Aplicar TODOS os manifests (inclui seu secret.yaml)
     - kubectl apply -n $K8S_NAMESPACE -f k8s/
 
     # Atualizar imagem
     - kubectl set image deployment/agenda-back agenda-back=$IMAGE_NAME:$IMAGE_TAG -n $K8S_NAMESPACE
 
     # Aguardar rollout
-    - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE
+    - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE --timeout=120s
 
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
