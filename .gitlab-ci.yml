@@ -71,7 +71,10 @@ deploy:
   image: bitnami/kubectl:latest
   script:
 
-    # Secret para pull da imagem
+    # Criar namespace (idempotente)
+    - kubectl apply -f k8s/namespace.yaml
+
+    # Secret do registry (pull da imagem)
     - >
       kubectl create secret docker-registry gitlab-registry-secret
       --docker-server=gitlab.tjpi.jus.br:5050
@@ -81,8 +84,14 @@ deploy:
       -n $K8S_NAMESPACE
       --dry-run=client -o yaml | kubectl apply -f -
 
-    # Aplicar manifests
-    - kubectl apply -f k8s/namespace.yaml
+    # 🔥 Secret da aplicação (vindos do GitLab CI/CD Variables)
+    - >
+      kubectl create secret generic agenda-back-secret
+      --from-literal=POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
+      -n $K8S_NAMESPACE
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Aplicar manifests (configmap, deployment, service)
     - kubectl apply -n $K8S_NAMESPACE -f k8s/
 
     # Atualizar imagem
