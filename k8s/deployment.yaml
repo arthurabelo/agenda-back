@@ -29,18 +29,18 @@ spec:
               value: k8s
 
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres:5432/agenda_db
+              value: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
 
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: agenda-back-secret
+                  name: postgres-secret
                   key: POSTGRES_USER
 
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: agenda-back-secret
+                  name: postgres-secret
                   key: POSTGRES_PASSWORD
 
             # 🔥 evita falha se banco demorar subir

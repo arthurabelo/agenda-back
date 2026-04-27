@@ -85,6 +85,7 @@ deploy:
       --dry-run=client -o yaml | kubectl apply -f -
 
     # 🔥 Aplicar secrets com envsubst (ANTES de tudo)
+    - apt-get update && apt-get install -y gettext
     - envsubst < k8s/postgres-secret.yaml | kubectl apply -n $K8S_NAMESPACE -f -
     #- envsubst < k8s/agenda-back-secret.yaml | kubectl apply -n $K8S_NAMESPACE -f -
 
