@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agenda-back
+  namespace: app-agenda
+spec:
+  selector:
+    app: agenda-back
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: LoadBalancer
