@@ -15,9 +15,9 @@ default:
   tags:
     - ouvidoria
 
-# -------------------------
+# --------------------------
 # SECURITY (não bloqueante)
-# -------------------------
+# --------------------------
 security_scan:
   stage: security
   image: maven:3.9.14-eclipse-temurin-25
