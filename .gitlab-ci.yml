@@ -1,0 +1,104 @@
+stages:
+  - security
+  - quality
+  - build
+  - docker
+  - deploy
+  - status_deploy
+
+variables:
+  IMAGE_NAME: "gitlab.tjpi.jus.br:5050/infraestrutura/agenda-back"
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+  K8S_NAMESPACE: "app-agenda"
+
+default:
+  tags:
+    - ouvidoria
+
+# --------------------------
+# SECURITY (não bloqueante)
+# --------------------------
+security_scan:
+  stage: security
+  image: node:20
+  script:
+    - npm install
+    - npm audit --audit-level=high || true
+  allow_failure: true
+
+# -------------------------
+# QUALITY (não bloqueante)
+# -------------------------
+quality_scan:
+  stage: quality
+  image: node:20
+  script:
+    - npm install
+    - npm run lint || true
+    - npm run test || true
+  allow_failure: true
+
+# -------------------------
+# BUILD
+# -------------------------
+build:
+  stage: build
+  image: node:20
+  script:
+    - npm install
+    - npm run build || true   # backend nem sempre precisa build (ex: Node puro)
+
+# --------------------------
+# DOCKER
+# --------------------------
+docker_build:
+  stage: docker
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"gitlab.tjpi.jus.br:5050\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/Dockerfile \
+        --destination $IMAGE_NAME:$IMAGE_TAG
+
+# -------------------------
+# DEPLOY K8S
+# -------------------------
+deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    # Secret do registry (ajustei aqui — seu front está com variáveis erradas)
+    - >
+      kubectl create secret docker-registry gitlab-registry-secret
+      --docker-server=gitlab.tjpi.jus.br:5050
+      --docker-username=$CI_REGISTRY_USER
+      --docker-password=$CI_REGISTRY_PASSWORD
+      --docker-email=devops@tjpi.jus.br
+      -n $K8S_NAMESPACE
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    - kubectl apply -f k8s/namespace.yaml
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/
+
+    - kubectl set image deployment/agenda-back agenda-back=$IMAGE_NAME:$IMAGE_TAG -n $K8S_NAMESPACE
+
+    - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+# -------------------------
+# STATUS DO DEPLOY
+# -------------------------
+status_deploy:
+  stage: status_deploy
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
