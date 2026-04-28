@@ -14,7 +14,7 @@ spec:
         app: agenda-back
     spec:
       imagePullSecrets:
-        - name: gitlab-registry-secret
+        - name: gitlab-registry-secret-back
 
       containers:
         - name: agenda-back

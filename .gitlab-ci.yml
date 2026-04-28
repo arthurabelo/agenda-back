@@ -76,7 +76,7 @@ deploy:
 
     # Secret do registry
     - >
-      kubectl create secret docker-registry gitlab-registry-secret
+      kubectl create secret docker-registry gitlab-registry-secret-back
       --docker-server=gitlab.tjpi.jus.br:5050
       --docker-username=$CI_REGISTRY_USER
       --docker-password=$CI_REGISTRY_PASSWORD
