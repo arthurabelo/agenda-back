@@ -105,6 +105,8 @@ deploy:
 
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
+  needs:
+    - docker_build
 
 # -------------------------
 # STATUS DO DEPLOY

@@ -18,7 +18,7 @@ spec:
 
       containers:
         - name: agenda-back
-          image: gitlab.tjpi.jus.br:5050/infraestrutura/agenda-back:latest
+          image: gitlab.tjpi.jus.br:5050/infraestrutura/agenda-back
           imagePullPolicy: Always
 
           ports:
