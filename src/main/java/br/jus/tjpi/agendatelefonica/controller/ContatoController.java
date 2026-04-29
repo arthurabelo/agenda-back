@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*")
 public class ContatoController {
     @Autowired // Injects the ContatoRepository dependency
     private ContatoRepository repository;
