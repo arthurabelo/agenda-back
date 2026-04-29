@@ -8,14 +8,23 @@ import java.util.List;
 
 public interface ContatoRepository  extends JpaRepository<Contato, Long> {
     
+    List<Contato> findByUnidadeContainingIgnoreCase(String unidade);
+
     List<Contato> findBySetorContainingIgnoreCase(String setor);
+
+    List<Contato> findByComarcaContainingIgnoreCase(String comarca);
     
+    List<Contato> findByLocalidadeContainingIgnoreCase(String localidade);
+
     List<Contato> findByTelefoneContainingIgnoreCase(String telefone);
-    
-    List<Contato> findByLocalContainingIgnoreCase(String local);
     
     @Query("SELECT c FROM Contato c WHERE " +
            "(:telefone IS NULL OR LOWER(c.telefone) LIKE LOWER(CONCAT('%', :telefone, '%'))) AND " +
-           "(:local IS NULL OR LOWER(c.local) LIKE LOWER(CONCAT('%', :local, '%')))")
-    List<Contato> findByTelefoneAndLocalOptional(@Param("telefone") String telefone, @Param("local") String local);
+           "(:comarca IS NULL OR LOWER(c.comarca) LIKE LOWER(CONCAT('%', :comarca, '%'))) AND " +
+           "(:unidade IS NULL OR LOWER(c.unidade) LIKE LOWER(CONCAT('%', :unidade, '%')))")
+    List<Contato> findByFiltrosOpcionais(
+        @Param("telefone") String telefone, 
+        @Param("comarca") String comarca, 
+        @Param("unidade") String unidade
+    );
 }

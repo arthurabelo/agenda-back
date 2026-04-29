@@ -8,17 +8,28 @@ import lombok.Data;
 @Table(name = "contatos")
 @Data
 public class Contato {
-    @Id // Unique identifier for the entity
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generates the ID value
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
     
-    @Column(nullable = false) // Specifies that the column cannot be null
+    @Column(nullable = false)
+    private String unidade;
+
     private String setor;
 
     @Column(nullable = false)
+    private String comarca;
+
+    private String endereco;
+    
+    private String localidade;
+    
     private String telefone;
 
-    @Column(nullable = false)
-    private String local;
+    @Column(name = "is_whatsapp")
+    private boolean isWhatsapp;
+
+    @Column(name = "is_ramal")
+    private boolean isRamal;
 }
