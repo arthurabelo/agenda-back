@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -47,14 +48,19 @@ public class ContatoController {
     @PutMapping("/contatos/{id}")
     public ResponseEntity<Contato> updateContato(@PathVariable Long id, @RequestBody Contato contato) {
         return repository.findById(id)
-                .map(existingContato -> {
-                    existingContato.setSetor(contato.getSetor());
-                    existingContato.setTelefone(contato.getTelefone());
-                    existingContato.setLocal(contato.getLocal());
-                    Contato updatedContato = repository.save(existingContato); // Updates the contact in the database
-                    return ResponseEntity.ok(updatedContato); // Returns the updated contact with 200 OK
+                .map(existing -> {
+                    existing.setUnidade(contato.getUnidade());
+                    existing.setSetor(contato.getSetor());
+                    existing.setTelefone(contato.getTelefone());
+                    existing.setEndereco(contato.getEndereco());
+                    existing.setLocalidade(contato.getLocalidade());
+                    existing.setComarca(contato.getComarca());
+                    existing.setWhatsapp(contato.isWhatsapp());
+                    existing.setRamal(contato.isRamal());
+                    
+                    return ResponseEntity.ok(repository.save(existing));
                 })
-                .orElse(ResponseEntity.notFound().build()); // If not found, return 404 Not Found
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/contatos/{id}")
@@ -92,7 +98,7 @@ public class ContatoController {
         
         // If only local is provided, search by local
         if (local != null) {
-            List<Contato> contatos = repository.findByLocalContainingIgnoreCase(local);
+            List<Contato> contatos = repository.findByLocalidadeContainingIgnoreCase(local);
             return ResponseEntity.ok(contatos);
         }
         
