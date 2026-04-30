@@ -82,29 +82,17 @@ public class ContatoController {
 
     @GetMapping("/contatos/search")
     public ResponseEntity<List<Contato>> searchContatos(
-            @RequestParam(required = false) String telefone,
-            @RequestParam(required = false) String local) {
+            @RequestParam(required = false) String comarca,
+            @RequestParam(required = false) String termo) {
         
-        // If both parameters are provided, search by both
-        if (telefone != null && local != null) {
-            List<Contato> contatos = repository.findByTelefoneAndLocalOptional(telefone, local);
-            return ResponseEntity.ok(contatos);
+        // Se ambos forem nulos ou vazios, retorna todos
+        if ((comarca == null || comarca.isBlank()) && (termo == null || termo.isBlank())) {
+            return ResponseEntity.ok(repository.findAll());
         }
-        
-        // If only telefone is provided, search by telefone
-        if (telefone != null) {
-            List<Contato> contatos = repository.findByTelefoneContainingIgnoreCase(telefone);
-            return ResponseEntity.ok(contatos);
-        }
-        
-        // If only local is provided, search by local
-        if (local != null) {
-            List<Contato> contatos = repository.findByLocalidadeContainingIgnoreCase(local);
-            return ResponseEntity.ok(contatos);
-        }
-        
-        // If no parameters provided, return all contacts
-        return ResponseEntity.ok(repository.findAll());
+
+        // Caso contrário, usa a busca global otimizada
+        List<Contato> contatos = repository.findByFiltroGlobal(comarca, termo);
+        return ResponseEntity.ok(contatos);
     }
     
 }
