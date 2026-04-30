@@ -29,7 +29,7 @@ public class OpenApiConfig {
                 .group("agenda-publica")
                 .displayName("Agenda Publica")
                 .pathsToMatch("/**")
-                .pathsToExclude("/health")
+                .pathsToExclude("/actuator")
                 .build();
     }
 
@@ -38,7 +38,7 @@ public class OpenApiConfig {
         return GroupedOpenApi.builder()
                 .group("monitoramento")
                 .displayName("Monitoramento")
-                .pathsToMatch("/health")
+                .pathsToMatch("/actuator")
                 .build();
     }
 }
