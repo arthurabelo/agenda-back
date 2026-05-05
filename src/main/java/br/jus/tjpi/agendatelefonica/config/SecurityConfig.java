@@ -23,9 +23,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
 
-                // 2. Permite o login e protege o resto
+                // 2. Permite API
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login").permitAll()
+                        .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll() // Importante para o Kubernetes
                         .anyRequest().authenticated()
                 )
