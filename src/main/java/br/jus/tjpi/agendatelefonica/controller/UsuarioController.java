@@ -16,7 +16,6 @@ import br.jus.tjpi.agendatelefonica.service.LoginService;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
 public class UsuarioController {
     @Autowired
     private UsuarioRepository repository;
