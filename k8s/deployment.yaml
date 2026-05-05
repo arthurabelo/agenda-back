@@ -43,6 +43,22 @@ spec:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
 
+            # 🔥 Variáveis do Active Directory inseridas aqui
+            - name: AD_SERVER_URL
+              value: "ldap://SUECIA.tjpi.local:389"
+
+            - name: AD_DOMAIN
+              value: "TJ-PI"
+
+            - name: AD_UPN_SUFFIX
+              value: "tjpi.local"
+
+            - name: AD_BASE_DN
+              value: "DC=tjpi,DC=local"
+
+            - name: AD_LOGIN_GROUP
+              value: "G.stic.Infraestrutura"
+
             # 🔥 evita falha se banco demorar subir
             #- name: SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT
               #value: "60000"
