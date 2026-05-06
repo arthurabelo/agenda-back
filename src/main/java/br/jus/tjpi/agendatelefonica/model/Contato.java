@@ -27,9 +27,6 @@ public class Contato {
     
     private String telefone;
 
-    @Column(name = "is_whatsapp")
-    private boolean isWhatsapp;
-
-    @Column(name = "is_ramal")
-    private boolean isRamal;
+    @Column(name = "tipo_contato")
+    private String tipoContato;
 }
