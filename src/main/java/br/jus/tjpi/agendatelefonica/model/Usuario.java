@@ -8,8 +8,8 @@ import lombok.Data;
 @Table(name = "usuarios")
 @Data
 public class Usuario {
-    @Id // Unique identifier for the entity
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generates the ID value
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
@@ -21,11 +21,11 @@ public class Usuario {
     private String password;
 
     @Column(nullable = false)
-    private String role;
+    private String role = "admin";
 
     @Column(nullable = false)
-    private boolean active;
+    private boolean active = true;
 
-    @Column(name = "ad_user", nullable = false, columnDefinition = "boolean default false")
+    @Column(name = "ad_user", nullable = false)
     private boolean adUser = false;
 }
