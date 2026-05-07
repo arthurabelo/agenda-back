@@ -16,6 +16,7 @@ import br.jus.tjpi.agendatelefonica.service.LoginService;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*") // Adicionado para facilitar integração com o Front
 public class UsuarioController {
     @Autowired
     private UsuarioRepository repository;
@@ -39,7 +40,7 @@ public class UsuarioController {
     public ResponseEntity<Usuario> createUsuario(@RequestBody Usuario usuario) {
         usuario.setId(null);
         if (usuario.getRole() == null || usuario.getRole().isBlank()) {
-            usuario.setRole("USER");
+            usuario.setRole("admin"); // Alterado de USER para admin
         }
         Usuario savedUsuario = repository.save(usuario);
         return ResponseEntity.ok(savedUsuario);
@@ -61,7 +62,15 @@ public class UsuarioController {
         return repository.findById(id)
                 .map(existingUsuario -> {
                     existingUsuario.setUsername(usuario.getUsername());
-                    existingUsuario.setPassword(usuario.getPassword());
+                    // Atualiza senha apenas se enviada
+                    if (usuario.getPassword() != null && !usuario.getPassword().isBlank()) {
+                        existingUsuario.setPassword(usuario.getPassword());
+                    }
+                    // Mantém a role e status sincronizados
+                    existingUsuario.setRole(usuario.getRole());
+                    existingUsuario.setActive(usuario.isActive());
+                    existingUsuario.setAdUser(usuario.isAdUser());
+                    
                     Usuario updatedUsuario = repository.save(existingUsuario);
                     return ResponseEntity.ok(updatedUsuario);
                 })
