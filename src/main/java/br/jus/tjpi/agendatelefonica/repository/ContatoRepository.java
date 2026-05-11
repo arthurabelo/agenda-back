@@ -27,7 +27,7 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
            "LOWER(c.endereco) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
            "LOWER(c.telefone) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
            "LOWER(c.tipoContato) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.meioDeContato) LIKE LOWER(CONCAT('%', :termo, '%'))")"
+           "LOWER(c.meioDeContato) LIKE LOWER(CONCAT('%', :termo, '%'))")
     List<Contato> findByFiltroGlobal(
         @Param("termo") String termo
     );
