@@ -27,6 +27,9 @@ public class Contato {
     
     private String telefone;
 
+    @Column(name = "meio_de_contato")
+    private String meioDeContato;
+
     @Column(name = "tipo_contato")
     private String tipoContato;
 }
