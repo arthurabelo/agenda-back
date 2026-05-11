@@ -52,6 +52,7 @@ public class ContatoController {
                     existing.setComarca(contato.getComarca());
                     
                     // Ajuste aqui: Sai os dois sets de boolean e entra o set de String
+                    existing.setMeioDeContato(contato.getMeioDeContato());
                     existing.setTipoContato(contato.getTipoContato());
                     
                     return ResponseEntity.ok(repository.save(existing));
