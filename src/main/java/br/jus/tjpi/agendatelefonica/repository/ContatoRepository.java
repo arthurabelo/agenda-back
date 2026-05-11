@@ -18,17 +18,17 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
 
     List<Contato> findByTelefoneContainingIgnoreCase(String telefone);
     
-    @Query("SELECT c FROM Contato c WHERE " +
+        @Query("SELECT c FROM Contato c WHERE " +
            "(:termo IS NULL OR (" +
            "LOWER(c.unidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
            "LOWER(c.setor) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
            "LOWER(c.localidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.comarca) LIKE LOWER(CONCAT('%', :termo, '%')) OR " + // Adicionado comarca aqui também
+           "LOWER(c.comarca) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
            "LOWER(c.endereco) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
            "LOWER(c.telefone) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
            "LOWER(c.tipoContato) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.meioDeContato) LIKE LOWER(CONCAT('%', :termo, '%'))")
-    List<Contato> findByFiltroGlobal(
-        @Param("termo") String termo
-    );
+           "LOWER(c.meioDeContato) LIKE LOWER(CONCAT('%', :termo, '%'))" +
+           "))") // <--- Esse parêntese e as aspas fecham a lógica
+    List<Contato> findByFiltroGlobal(@Param("termo") String termo);
+
 }
