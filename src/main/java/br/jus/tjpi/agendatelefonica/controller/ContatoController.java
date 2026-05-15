@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api")
@@ -77,16 +79,9 @@ public class ContatoController {
     }
 
     @GetMapping("/contatos/search")
-    public ResponseEntity<List<Contato>> searchContatos(
-            @RequestParam(required = false) String termo) {
-        
-        // Se ambos forem nulos ou vazios, retorna todos
-        if (termo == null || termo.isBlank()) {
-            return ResponseEntity.ok(repository.findAll());
-        }
-
-        // Caso contrário, usa a busca global otimizada
-        List<Contato> contatos = repository.findByFiltroGlobal(termo);
+    public ResponseEntity<Page<Contato>> searchContatos(
+            @RequestParam(required = false) String termo, Pageable pageable) {
+        Page<Contato> contatos = repository.findByFiltroGlobal(termo, pageable);
         return ResponseEntity.ok(contatos);
     }
 }

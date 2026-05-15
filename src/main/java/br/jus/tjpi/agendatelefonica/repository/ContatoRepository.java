@@ -4,6 +4,8 @@ import br.jus.tjpi.agendatelefonica.model.Contato;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface ContatoRepository  extends JpaRepository<Contato, Long> {
@@ -18,17 +20,18 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
 
     List<Contato> findByTelefoneContainingIgnoreCase(String telefone);
     
-        @Query("SELECT c FROM Contato c WHERE " +
-           "(:termo IS NULL OR (" +
-           "LOWER(c.unidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.setor) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.localidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.comarca) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.endereco) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.telefone) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.tipoContato) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-           "LOWER(c.meioDeContato) LIKE LOWER(CONCAT('%', :termo, '%'))" +
-           "))") // <--- Esse parêntese e as aspas fecham a lógica
-    List<Contato> findByFiltroGlobal(@Param("termo") String termo);
+    @Query("SELECT c FROM Contato c WHERE " +
+       "(:termo IS NULL OR (" +
+       "LOWER(c.unidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+       "LOWER(c.setor) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+       "LOWER(c.localidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+       "LOWER(c.comarca) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+       "LOWER(c.endereco) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+       "LOWER(c.telefone) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+       "LOWER(c.tipoContato) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+       "LOWER(c.meioDeContato) LIKE LOWER(CONCAT('%', :termo, '%'))" +
+       "))"
+    )
+    Page<Contato> findByFiltroGlobal(@Param("termo") String termo, Pageable pageable);
 
 }
