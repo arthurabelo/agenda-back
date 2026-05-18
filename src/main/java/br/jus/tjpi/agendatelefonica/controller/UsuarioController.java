@@ -98,6 +98,10 @@ public class UsuarioController {
         String token = tokenService.gerarToken(usuario);
 
         LoginResponse response = new LoginResponse(
+                usuario.getId(),
+                usuario.getUsername(),
+                usuario.getRole(),
+                usuario.isActive(),
                 token
         );
 
