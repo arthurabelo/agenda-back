@@ -94,19 +94,22 @@ public class UsuarioController {
     private TokenService tokenService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         Usuario usuario = loginService.autenticarOuFalhar(request.username(), request.password());
         String token = tokenService.gerarToken(usuario);
+        Cookie jwtCookie = new Cookie("jwt_token", token);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setPath("/");
+        response.addCookie(jwtCookie);
 
-        LoginResponse response = new LoginResponse(
+        LoginResponse dadosVisuais = new LoginResponse(
                 usuario.getId(),
                 usuario.getUsername(),
                 usuario.getRole(),
-                usuario.isActive(),
-                token
+                usuario.isActive()
         );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(dadosVisuais);
     }
 
 }
