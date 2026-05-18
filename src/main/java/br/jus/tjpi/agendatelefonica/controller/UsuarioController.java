@@ -16,6 +16,9 @@ import br.jus.tjpi.agendatelefonica.repository.UsuarioRepository;
 import br.jus.tjpi.agendatelefonica.service.LoginService;
 import br.jus.tjpi.agendatelefonica.service.TokenService;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*") // Adicionado para facilitar integração com o Front
