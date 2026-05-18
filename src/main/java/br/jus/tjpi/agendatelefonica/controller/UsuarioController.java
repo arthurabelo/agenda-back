@@ -29,13 +29,13 @@ public class UsuarioController {
     @Autowired
     private LoginService loginService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     @GetMapping("/usuarios")
     public ResponseEntity<List<Usuario>> getUsuarios() {
         return ResponseEntity.ok(repository.findAll());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     @GetMapping("/usuarios/{id}")
     public ResponseEntity<Usuario> getUsuarioById(@PathVariable Long id) {
         return repository.findById(id)
@@ -43,7 +43,7 @@ public class UsuarioController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     @PostMapping("/usuarios")
     public ResponseEntity<Usuario> createUsuario(@RequestBody Usuario usuario) {
         usuario.setId(null);
@@ -54,7 +54,7 @@ public class UsuarioController {
         return ResponseEntity.ok(savedUsuario);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     @DeleteMapping("/usuarios/delete/{id}")
     public ResponseEntity<Object> deleteUsuario(@PathVariable Long id) {
         return repository.findById(id)
@@ -66,7 +66,7 @@ public class UsuarioController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     @PutMapping("/usuarios/{id}")
     public ResponseEntity<Usuario> updateUsuario(@PathVariable Long id, @RequestBody Usuario usuario) {
         return repository.findById(id)
@@ -87,7 +87,7 @@ public class UsuarioController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     @GetMapping("/usuarios/search")
     public ResponseEntity<List<Usuario>> searchUsuarios(@RequestParam String username) {
         return ResponseEntity.ok(repository.findByUsername(username));
