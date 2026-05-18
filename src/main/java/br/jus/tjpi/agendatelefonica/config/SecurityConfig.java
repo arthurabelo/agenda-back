@@ -31,9 +31,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contatos/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/contatos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/contatos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/contatos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/contatos/**").hasRole("admin")
+                        .requestMatchers(HttpMethod.PUT, "/api/contatos/**").hasRole("admin")
+                        .requestMatchers(HttpMethod.DELETE, "/api/contatos/**").hasRole("admin")
                         .requestMatchers("/actuator/**").permitAll() // Importante para o Kubernetes
                         .anyRequest().authenticated()
                 )
