@@ -36,7 +36,7 @@ public class ContatoController {
                 .orElse(ResponseEntity.notFound().build()); // If not found, return 404 Not Found
     }
 
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAuthority('admin')")
     @PostMapping("/contatos")
     public ResponseEntity<Contato> createContato(@RequestBody Contato contato) {
         contato.setId(null);
@@ -44,7 +44,7 @@ public class ContatoController {
         return ResponseEntity.ok(savedContato); // Returns the saved contact with 200 OK
     }
 
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAuthority('admin')")
     @PutMapping("/contatos/{id}")
     public ResponseEntity<Contato> updateContato(@PathVariable Long id, @RequestBody Contato contato) {
         return repository.findById(id)
@@ -65,7 +65,7 @@ public class ContatoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAuthority('admin')")
     @DeleteMapping("/contatos/{id}")
     public ResponseEntity<Object> deleteContato(@PathVariable Long id) {
         return repository.findById(id)
