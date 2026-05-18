@@ -9,6 +9,7 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import br.jus.tjpi.agendatelefonica.model.Usuario;
 import br.jus.tjpi.agendatelefonica.repository.UsuarioRepository;
