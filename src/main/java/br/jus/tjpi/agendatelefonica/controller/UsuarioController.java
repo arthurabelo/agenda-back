@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import br.jus.tjpi.agendatelefonica.model.Usuario;
 import br.jus.tjpi.agendatelefonica.repository.UsuarioRepository;
 import br.jus.tjpi.agendatelefonica.service.LoginService;
+import br.jus.tjpi.agendatelefonica.service.TokenService;
 
 @RestController
 @RequestMapping("/api")
@@ -88,15 +89,18 @@ public class UsuarioController {
         return ResponseEntity.ok(repository.findByUsername(username));
     }
 
+    @Autowired
+    private TokenService tokenService;
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         Usuario usuario = loginService.autenticarOuFalhar(request.username(), request.password());
+        String token = tokenService.gerarToken(usuario);
+
         LoginResponse response = new LoginResponse(
-                usuario.getId(),
-                usuario.getUsername(),
-                usuario.getRole(),
-                usuario.isActive()
+                token
         );
+
         return ResponseEntity.ok(response);
     }
 

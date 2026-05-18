@@ -19,13 +19,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
         http
+                .csrf(csrf -> csrf.disable()) // Desabilita para APIs RESTful
                 // 1. Integra o CORS e desabilita CSRF (Essencial para APIs)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
 
                 // 2. Permite API
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/api/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/contatos/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/contatos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/contatos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/contatos/**").hasRole("ADMIN")
                         .requestMatchers("/actuator/**").permitAll() // Importante para o Kubernetes
                         .anyRequest().authenticated()
                 )
