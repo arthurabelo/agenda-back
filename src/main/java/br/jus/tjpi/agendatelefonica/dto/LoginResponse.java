@@ -4,7 +4,6 @@ public record LoginResponse(
         Long id,
         String username,
         String role,
-        boolean active,
-        String token
+        boolean active
 ) {
 }
