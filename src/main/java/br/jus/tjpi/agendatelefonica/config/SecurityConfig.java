@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/contatos/**").hasAuthority("admin")
                         .requestMatchers(HttpMethod.PUT, "/api/contatos/**").hasAuthority("admin")
                         .requestMatchers(HttpMethod.DELETE, "/api/contatos/**").hasAuthority("admin")
+                        .requestMatchers(HttpMethod.GET, "/swagger-ui/**").hasAuthority("admin")
                         .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -47,7 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
             // Busca o usuário no banco para pegar a role correta dele
             // OBS: Se você tiver um método no UsuarioRepository como findByUsername, use-o aqui.
             // Se o seu método retornar Optional, não esqueça do .get() ou .orElse(null)
-            Usuario usuario = repository.findByUsername(username).orElse(null);
+            Usuario usuario = repository.findByUsername(username).stream().findFirst().orElse(null);
 
             if (usuario != null) {
                 // Converte a string "admin" em uma Autoridade que o Spring entende
