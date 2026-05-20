@@ -31,12 +31,12 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/login", "/api/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contatos/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/contatos/**").hasAuthority("admin")
                         .requestMatchers(HttpMethod.PUT, "/api/contatos/**").hasAuthority("admin")
                         .requestMatchers(HttpMethod.DELETE, "/api/contatos/**").hasAuthority("admin")
-                        .requestMatchers(HttpMethod.GET, "/swagger-ui/**").hasAuthority("admin")
                         .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )
