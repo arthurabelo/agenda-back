@@ -115,4 +115,15 @@ public class UsuarioController {
         return ResponseEntity.ok(dadosVisuais);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        Cookie jwtCookie = new Cookie("jwt_token", null);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0);
+
+        response.addCookie(jwtCookie);
+        return ResponseEntity.ok().build();
+    }
+
 }

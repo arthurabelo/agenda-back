@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login").permitAll()
+                        .requestMatchers("/api/login", "/api/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contatos/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/contatos/**").hasAuthority("admin")
                         .requestMatchers(HttpMethod.PUT, "/api/contatos/**").hasAuthority("admin")
@@ -43,7 +43,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // 3. ADICIONE ESTA LINHA PARA O SPRING LER O COOKIE!
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
