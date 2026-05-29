@@ -4,11 +4,13 @@ import br.jus.tjpi.agendatelefonica.dto.LoginRequest;
 import br.jus.tjpi.agendatelefonica.dto.LoginResponse;
 import br.jus.tjpi.agendatelefonica.model.Usuario;
 import br.jus.tjpi.agendatelefonica.repository.UsuarioRepository;
+import br.jus.tjpi.agendatelefonica.service.AuditLogService;
 import br.jus.tjpi.agendatelefonica.service.LoginService;
 import br.jus.tjpi.agendatelefonica.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.lang.reflect.Field;
@@ -24,6 +26,7 @@ class UsuarioControllerTest {
     private LoginService loginService;
     private UsuarioRepository usuarioRepository;
     private TokenService tokenService;
+    private AuditLogService auditLogService;
 
     private UsuarioController usuarioController;
 
@@ -32,11 +35,13 @@ class UsuarioControllerTest {
         loginService = mock(LoginService.class);
         usuarioRepository = mock(UsuarioRepository.class);
         tokenService = mock(TokenService.class);
+        auditLogService = mock(AuditLogService.class);
         usuarioController = new UsuarioController();
 
         inject("loginService", loginService);
         inject("repository", usuarioRepository);
         inject("tokenService", tokenService); // Injeta o gerador de token fake pro teste
+        inject("auditLogService", auditLogService);
     }
 
     @Test
@@ -53,9 +58,10 @@ class UsuarioControllerTest {
 
         // Cria a resposta simulada que será preenchida pelo Controller
         MockHttpServletResponse mockResponse = new MockHttpServletResponse();
+        MockHttpServletRequest mockRequest = new MockHttpServletRequest();
 
         // Passa a requisição e a resposta simulada
-        ResponseEntity<LoginResponse> response = usuarioController.login(new LoginRequest("usuario_teste", "segredo"), mockResponse);
+        ResponseEntity<LoginResponse> response = usuarioController.login(new LoginRequest("usuario_teste", "segredo"), mockResponse, mockRequest);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(1L, response.getBody().id());
@@ -75,9 +81,10 @@ class UsuarioControllerTest {
 
         // Cria a resposta simulada para esse cenário também
         MockHttpServletResponse mockResponse = new MockHttpServletResponse();
+        MockHttpServletRequest mockRequest = new MockHttpServletRequest();
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
-                () -> usuarioController.login(new LoginRequest("usuario_teste", "segredo"), mockResponse));
+                () -> usuarioController.login(new LoginRequest("usuario_teste", "segredo"), mockResponse, mockRequest));
 
         assertEquals(expected.getMessage(), thrown.getMessage());
     }
