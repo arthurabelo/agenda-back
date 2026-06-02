@@ -33,13 +33,13 @@ public class ContatoController {
 
     @GetMapping("/contatos")
     public ResponseEntity<List<Contato>> getContatos(HttpServletRequest request) {
-        auditLogService.mark(request, "LIST", "CONTATO", null, "Listagem de contatos");
+        //auditLogService.mark(request, "LIST", "CONTATO", null, "Listagem de contatos");
         return ResponseEntity.ok(repository.findAll()); // Returns a list of all contacts
     }
 
     @GetMapping("/contatos/{id}")
     public ResponseEntity<Contato> getContatoById(@PathVariable Long id, HttpServletRequest request) {
-        auditLogService.mark(request, "VIEW", "CONTATO", id, "Consulta de contato por ID");
+        //auditLogService.mark(request, "VIEW", "CONTATO", id, "Consulta de contato por ID");
         return repository.findById(id)
                 .map(ResponseEntity::ok) // If found, return the contact with 200 OK
                 .orElse(ResponseEntity.notFound().build()); // If not found, return 404 Not Found
@@ -97,7 +97,7 @@ public class ContatoController {
 
     @GetMapping("/contatos/search/setor")
     public ResponseEntity<List<Contato>> searchContatosBySetor(@RequestParam String setor, HttpServletRequest request) {
-        auditLogService.mark(request, "SEARCH", "CONTATO", null, "Busca de contatos por setor");
+        //auditLogService.mark(request, "SEARCH", "CONTATO", null, "Busca de contatos por setor");
         List<Contato> contatos = repository.findBySetorContainingIgnoreCase(setor); // Searches for contacts by setor
         return ResponseEntity.ok(contatos); // Returns the list of matching contacts with 200 OK
     }
@@ -105,7 +105,7 @@ public class ContatoController {
     @GetMapping("/contatos/search")
     public ResponseEntity<Page<Contato>> searchContatos(
             @RequestParam(required = false) String termo, Pageable pageable, HttpServletRequest request) {
-        auditLogService.mark(request, "SEARCH", "CONTATO", null, "Busca global de contatos");
+        //auditLogService.mark(request, "SEARCH", "CONTATO", null, "Busca global de contatos");
         Page<Contato> contatos = repository.findByFiltroGlobal(termo, pageable);
         return ResponseEntity.ok(contatos);
     }
