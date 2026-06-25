@@ -39,6 +39,10 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
     List<String> findDistinctComarcas();
 
     // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
+   @Query("SELECT DISTINCT LOWER(c.comarca) FROM Contato c WHERE c.comarca IS NOT NULL ORDER BY c.comarca ASC")
+    List<String> findDistinctComarcas();
+
+    // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
     @Query("SELECT c FROM Contato c WHERE " +
            "(:comarca IS NULL OR c.comarca = :comarca) AND " +
            "(:meioDeContato IS NULL OR c.meioDeContato = :meioDeContato) AND " +
@@ -50,6 +54,5 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
         @Param("tipoContato") String tipoContato,
         @Param("unidade") String unidade
     );
-
 
 }
