@@ -56,6 +56,14 @@
 			<version>3.0.2</version>
 		</dependency>
 
+		/*dependencia para criar arquivos xls*/
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<groupId>poi-ooxml</groupId>
+			<version>5.2.5</version>
+		</dependency>
+
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
