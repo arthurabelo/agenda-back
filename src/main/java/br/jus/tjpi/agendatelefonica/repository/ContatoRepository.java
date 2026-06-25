@@ -34,4 +34,22 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
     )
     Page<Contato> findByFiltroGlobal(@Param("termo") String termo, Pageable pageable);
 
+        // Query para trazer a lista limpa de comarcas pro select do front
+    @Query("SELECT DISTINCT LOWER(c.comarca) FROM Contato c WHERE c.comarca IS NOT NULL ORDER BY c.comarca ASC")
+    List<String> findDistinctComarcas();
+
+    // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
+    @Query("SELECT c FROM Contato c WHERE " +
+           "(:comarca IS NULL OR c.comarca = :comarca) AND " +
+           "(:meioDeContato IS NULL OR c.meioDeContato = :meioDeContato) AND " +
+           "(:tipoContato IS NULL OR c.tipoContato = :tipoContato) AND " +
+           "(:unidade IS NULL OR LOWER(c.unidade) LIKE LOWER(CONCAT('%', :unidade, '%')))")
+    List<Contato> findContatosParaRelatorio(
+        @Param("comarca") String comarca,
+        @Param("meioDeContato") String meioDeContato,
+        @Param("tipoContato") String tipoContato,
+        @Param("unidade") String unidade
+    );
+
+
 }
