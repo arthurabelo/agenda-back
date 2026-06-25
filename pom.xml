@@ -59,7 +59,7 @@
 		/*dependencia para criar arquivos xls*/
 		<dependency>
 			<groupId>org.apache.poi</groupId>
-			<groupId>poi-ooxml</groupId>
+			<artifactId>poi-ooxml</artifactId>
 			<version>5.2.5</version>
 		</dependency>
 
