@@ -56,7 +56,7 @@
 			<version>3.0.2</version>
 		</dependency>
 
-		/*dependencia para criar arquivos xls*/
+		<!-- Dependencia para criar arquivos xls -->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
