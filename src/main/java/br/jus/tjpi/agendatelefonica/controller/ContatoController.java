@@ -127,12 +127,16 @@ public class ContatoController {
 
         auditLogService.mark(request, "EXPORT", "CONTATO", null, "Exportacao de relatorio em planilha Excel (.xlsx)");
 
-        String filtroComarca = (comarca != null && !comarca.trim().isEmpty()) ? comarca.trim() : null;
+                // Trata os filtros opcionais diretamente no Java para não quebrar o banco
+        String filtroComarca = (comarca != null && !comarca.trim().isEmpty()) ? comarca.trim().toLowerCase() : null;
         String filtroMeio = (meioDeContato != null && !meioDeContato.trim().isEmpty()) ? meioDeContato.trim() : null;
         String filtroTipo = (tipoContato != null && !tipoContato.trim().isEmpty()) ? tipoContato.trim() : null;
-        String filtroUnidade = (unidade != null && !unidade.trim().isEmpty()) ? unidade.trim() : null;
+        
+        // Faz a concatenação do LIKE (%) diretamente no Java, evitando o bug do bytea
+        String filtroUnidade = (unidade != null && !unidade.trim().isEmpty()) ? "%" + unidade.trim().toLowerCase() + "%" : null;
 
         List<Contato> contatos = repository.findContatosParaRelatorio(filtroComarca, filtroMeio, filtroTipo, filtroUnidade);
+
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Contatos Filtrados");
