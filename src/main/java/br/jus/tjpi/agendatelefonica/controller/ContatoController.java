@@ -115,7 +115,7 @@ public class ContatoController {
         return ResponseEntity.ok(repository.findDistinctComarcas());
     }
 
-    @PreAuthorize("hasAuthority('admin')")
+    //@PreAuthorize("hasAuthority('admin')")
     @GetMapping("/contatos/relatorio/exportar")
     public void exportarExcel(
             @RequestParam(required = false) String comarca,
