@@ -33,16 +33,15 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
        "))"
     )
     Page<Contato> findByFiltroGlobal(@Param("termo") String termo, Pageable pageable);
-
-
-    // Retorna uma lista de Arrays contendo [Comarca, Unidade] agrupadas e ordenadas
-    @Query("SELECT DISTINCT UPPER(c.comarca), UPPER(c.unidade) FROM Contato c " +
-            "WHERE c.comarca IS NOT NULL AND c.comarca <> '' " +
-            "AND c.unidade IS NOT NULL AND c.unidade <> '' " +
-            "ORDER BY UPPER(c.comarca) ASC, UPPER(c.unidade) ASC")
+    
+    // Busca somente os valores necessários para os filtros. A normalização também
+    // elimina espaços acidentais e evita que variações de maiúsculas gerem duplicatas.
+    @Query("SELECT DISTINCT UPPER(TRIM(c.comarca)), UPPER(TRIM(c.unidade)) FROM Contato c " +
+            "WHERE c.comarca IS NOT NULL AND TRIM(c.comarca) <> '' " +
+            "AND c.unidade IS NOT NULL AND TRIM(c.unidade) <> '' " +
+            "ORDER BY UPPER(TRIM(c.comarca)), UPPER(TRIM(c.unidade))")
     List<Object[]> findComarcasEUnidades();
 
-    // Uso da lista coringa ('') para evitar erro de sintaxe AST do Hibernate
     @Query("SELECT c FROM Contato c WHERE " +
             "('' IN :comarcas OR UPPER(c.comarca) IN :comarcas) AND " +
             "('' IN :meiosDeContato OR UPPER(c.meioDeContato) IN :meiosDeContato) AND " +

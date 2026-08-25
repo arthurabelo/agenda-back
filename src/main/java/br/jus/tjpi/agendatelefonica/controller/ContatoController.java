@@ -113,14 +113,20 @@ public class ContatoController {
         return ResponseEntity.ok(contatos);
     }
 
-    @GetMapping("/contatos/filtros-ativos")
-    public ResponseEntity<Map<String, List<String>>> getFiltrosAtivos() {
+    @GetMapping("/contatos/filtros")
+    public ResponseEntity<Map<String, List<String>>> getFiltros() {
         List<Object[]> resultados = repository.findComarcasEUnidades();
         Map<String, List<String>> mapaFiltros = new LinkedHashMap<>();
+
         for (Object[] linha : resultados) {
-            String comarca = (String) linha[0];
-            String unidade = (String) linha[1];
-            mapaFiltros.computeIfAbsent(comarca, k -> new ArrayList<>()).add(unidade);
+            if (linha != null && linha.length >= 2) {
+                String comarca = linha[0] == null ? "" : String.valueOf(linha[0]).trim();
+                String unidade = linha[1] == null ? "" : String.valueOf(linha[1]).trim();
+
+                if (!comarca.isEmpty() && !unidade.isEmpty()) {
+                    mapaFiltros.computeIfAbsent(comarca, chave -> new ArrayList<>()).add(unidade);
+                }
+            }
         }
         return ResponseEntity.ok(mapaFiltros);
     }
