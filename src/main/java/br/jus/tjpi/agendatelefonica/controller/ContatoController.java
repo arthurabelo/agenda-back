@@ -115,6 +115,11 @@ public class ContatoController {
         return ResponseEntity.ok(repository.findDistinctComarcas());
     }
 
+    @GetMapping("/contatos/unidades-ativas")
+    public ResponseEntity<List<String>> getUnidadesAtivas() {
+        return ResponseEntity.ok(repository.findDistinctUnidades());
+    }
+
     //@PreAuthorize("hasAuthority('admin')")
     @GetMapping("/contatos/relatorio/exportar")
     public void exportarExcel(
@@ -137,6 +142,12 @@ public class ContatoController {
 
         List<Contato> contatos = repository.findContatosParaRelatorio(filtroComarca, filtroMeio, filtroTipo, filtroUnidade);
 
+        // Se não houver registros com os filtros aplicados, retorna 204 No Content sem gerar arquivo
+        if (contatos.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            response.getWriter().write("Nenhum registro encontrado com os filtros informados.");
+            return;
+        }
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Contatos Filtrados");

@@ -39,6 +39,8 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
    @Query("SELECT DISTINCT LOWER(c.comarca) FROM Contato c WHERE c.comarca IS NOT NULL ORDER BY LOWER(c.comarca) ASC")
     List<String> findDistinctComarcas();
 
+    @Query("SELECT DISTINCT c.unidade FROM Contato c WHERE c.unidade IS NOT NULL AND c.unidade <> '' ORDER BY c.unidade ASC")
+    List<String> findDistinctUnidades();
 
     // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
     @Query("SELECT c FROM Contato c WHERE " +
