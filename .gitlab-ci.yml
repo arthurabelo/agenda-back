@@ -64,11 +64,13 @@ docker_build:
         --destination $IMAGE_NAME:latest
 
 # -------------------------
-# DEPLOY K8S
+# DEPLOY K8S - HOMOLOGAÇÃO
 # -------------------------
-deploy:
+deploy-hom:
   stage: deploy
   image: bitnami/kubectl:latest
+  environment:
+    name: hom
   script:
 
     # Namespace
@@ -86,16 +88,11 @@ deploy:
 
     # 🔥 Aplicar secrets com envsubst (ANTES de tudo)
     - apt-get update && apt-get install -y gettext
-    - envsubst < k8s/postgres-secret.yaml | kubectl apply -n $K8S_NAMESPACE -f -
-    #- envsubst < k8s/agenda-back-secret.yaml | kubectl apply -n $K8S_NAMESPACE -f -
+    - envsubst < k8s/hom/db-secret.yaml | kubectl apply -n $K8S_NAMESPACE -f -
 
-    # 🔹 Aplicar resto (SEM secrets)
-    - kubectl apply -n $K8S_NAMESPACE -f k8s/postgres-pvc.yaml
-    - kubectl apply -n $K8S_NAMESPACE -f k8s/postgres-deployment.yaml
-    - kubectl apply -n $K8S_NAMESPACE -f k8s/postgres-service.yaml
-
-    - kubectl apply -n $K8S_NAMESPACE -f k8s/deployment.yaml
-    - kubectl apply -n $K8S_NAMESPACE -f k8s/service.yaml
+    # 🔹 Aplicar deployments (homologação)
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/hom/deployment.yaml
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/hom/service.yaml
 
     # Atualizar imagem
     - kubectl set image deployment/agenda-back agenda-back=$IMAGE_NAME:$IMAGE_TAG -n $K8S_NAMESPACE
@@ -109,12 +106,62 @@ deploy:
     - docker_build
 
 # -------------------------
+# DEPLOY K8S - PRODUÇÃO
+# -------------------------
+deploy-prd:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  environment:
+    name: prd
+  script:
+
+    # Namespace
+    - kubectl get ns $K8S_NAMESPACE || kubectl create ns $K8S_NAMESPACE
+
+    # Secret do registry
+    - >
+      kubectl create secret docker-registry gitlab-registry-secret-back
+      --docker-server=gitlab.tjpi.jus.br:5050
+      --docker-username=$CI_REGISTRY_USER
+      --docker-password=$CI_REGISTRY_PASSWORD
+      --docker-email=devops@tjpi.jus.br
+      -n $K8S_NAMESPACE
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # 🔹 Aplicar deployments (produção)
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/prd/deployment.yaml
+    - kubectl apply -n $K8S_NAMESPACE -f k8s/prd/service.yaml
+
+    # Atualizar imagem
+    - kubectl set image deployment/agenda-back agenda-back=$IMAGE_NAME:$IMAGE_TAG -n $K8S_NAMESPACE
+
+    # Aguardar rollout
+    - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE --timeout=180s
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
+  needs:
+    - docker_build
+
+# -------------------------
 # STATUS DO DEPLOY
 # -------------------------
-status_deploy:
+status_deploy-hom:
   stage: status_deploy
-  image: bitnami/kubectl:latest
+  environment:
+    name: hom
+    action: verify
   script:
     - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
+
+status_deploy-prd:
+  stage: status_deploy
+  environment:
+    name: prd
+    action: verify
+  script:
+    - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'

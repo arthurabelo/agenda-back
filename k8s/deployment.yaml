@@ -26,18 +26,18 @@ spec:
 
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: k8s
+              value: hom
 
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres:5432/agenda_db
+            - name: POSTGRES_DB_URL
+              value: jdbc:postgresql://10.20.48.29:5432/agenda_db
 
-            - name: SPRING_DATASOURCE_USERNAME
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_USER
 
-            - name: SPRING_DATASOURCE_PASSWORD
+            - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
