@@ -49,7 +49,7 @@ build:
 docker_build:
   stage: docker
   image:
-    name: gcr.io/kaniko-project/executor:debug
+    name: gitlab.tjpi.jus.br:5050/infraestrutura/agenda-back/kaniko-mirror:kaniko-debug
     entrypoint: [""]
   script:
     - mkdir -p /kaniko/.docker
