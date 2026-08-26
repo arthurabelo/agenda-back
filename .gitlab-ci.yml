@@ -150,18 +150,20 @@ status_deploy-hom:
   stage: status_deploy
   environment:
     name: hom
-    action: verify
   script:
     - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
+  needs:
+    - deploy-hom
 
 status_deploy-prd:
   stage: status_deploy
   environment:
     name: prd
-    action: verify
   script:
     - kubectl rollout status deployment/agenda-back -n $K8S_NAMESPACE
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
+  needs:
+    - deploy-prd
