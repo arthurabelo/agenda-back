@@ -68,9 +68,11 @@ docker_build:
 # -------------------------
 deploy-hom:
   stage: deploy
-  image: bitnami/kubectl:latest
+  image: alpine/k8s:1.30.2
   environment:
     name: hom
+  before_script:
+    - apk add --no-cache gettext
   script:
 
     # Namespace
@@ -87,7 +89,6 @@ deploy-hom:
       --dry-run=client -o yaml | kubectl apply -f -
 
     # 🔥 Aplicar secrets com envsubst (ANTES de tudo)
-    - apt-get update && apt-get install -y gettext
     - envsubst < k8s/hom/db-secret.yaml | kubectl apply -n $K8S_NAMESPACE -f -
 
     # 🔹 Aplicar deployments (homologação)
@@ -110,9 +111,11 @@ deploy-hom:
 # -------------------------
 deploy-prd:
   stage: deploy
-  image: bitnami/kubectl:latest
+  image: alpine/k8s:1.30.2
   environment:
     name: prd
+  before_script:
+    - apk add --no-cache gettext
   script:
 
     # Namespace
@@ -148,6 +151,7 @@ deploy-prd:
 # -------------------------
 status_deploy-hom:
   stage: status_deploy
+  image: alpine/k8s:1.30.2
   environment:
     name: hom
   script:
@@ -159,6 +163,7 @@ status_deploy-hom:
 
 status_deploy-prd:
   stage: status_deploy
+  image: alpine/k8s:1.30.2
   environment:
     name: prd
   script:

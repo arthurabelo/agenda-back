@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agenda-back
+  namespace: app-agenda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agenda-back
+  template:
+    metadata:
+      labels:
+        app: agenda-back
+    spec:
+      imagePullSecrets:
+        - name: gitlab-registry-secret-back
+
+      containers:
+        - name: agenda-back
+          image: gitlab.tjpi.jus.br:5050/infraestrutura/agenda-back
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: hom
+
+            - name: POSTGRES_DB_URL
+              value: jdbc:postgresql://10.20.48.29:5432/agenda_db
+
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_USER
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_PASSWORD
+
+            # 🔥 Variáveis do Active Directory inseridas aqui
+            - name: AD_SERVER_URL
+              value: "ldap://SUECIA.tjpi.local:389"
+
+            - name: AD_DOMAIN
+              value: "TJ-PI"
+
+            - name: AD_UPN_SUFFIX
+              value: "tjpi.local"
+
+            - name: AD_BASE_DN
+              value: "DC=tjpi,DC=local"
+
+            - name: AD_LOGIN_GROUP
+              value: "G.stic.Infraestrutura"
+
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 80
+            periodSeconds: 20
