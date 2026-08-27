@@ -3,6 +3,7 @@ package br.jus.tjpi.agendatelefonica.controller;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -120,7 +121,7 @@ public class ContatoController {
         return ResponseEntity.ok(repository.findDistinctUnidades());
     }
 
-    //@PreAuthorize("hasAuthority('admin')")
+    @PreAuthorize("hasAuthority('admin')")
     @GetMapping("/contatos/relatorio/exportar")
     public void exportarExcel(
             @RequestParam(required = false) String comarca,
@@ -132,17 +133,30 @@ public class ContatoController {
 
         auditLogService.mark(request, "EXPORT", "CONTATO", null, "Exportacao de relatorio em planilha Excel (.xlsx)");
 
-                // Trata os filtros opcionais diretamente no Java para não quebrar o banco
-        String filtroComarca = (comarca != null && !comarca.trim().isEmpty()) ? comarca.trim().toLowerCase() : null;
-        String filtroMeio = (meioDeContato != null && !meioDeContato.trim().isEmpty()) ? meioDeContato.trim() : null;
-        String filtroTipo = (tipoContato != null && !tipoContato.trim().isEmpty()) ? tipoContato.trim() : null;
-        
-        // Faz a concatenação do LIKE (%) diretamente no Java, evitando o bug do bytea
-        String filtroUnidade = (unidade != null && !unidade.trim().isEmpty()) ? "%" + unidade.trim().toLowerCase() + "%" : null;
+        // 1. Converte as strings delimitadas por vírgula em List<String>.
+        // Se a string vier vazia ou nula, passamos 'null' para a query ignorar a cláusula.
+        List<String> listaComarcas = (comarca != null && !comarca.trim().isEmpty())
+                ? Arrays.asList(comarca.trim().toLowerCase().split(","))
+                : null;
 
-        List<Contato> contatos = repository.findContatosParaRelatorio(filtroComarca, filtroMeio, filtroTipo, filtroUnidade);
+        List<String> listaMeios = (meioDeContato != null && !meioDeContato.trim().isEmpty())
+                ? Arrays.asList(meioDeContato.trim().split(","))
+                : null;
 
-        // Se não houver registros com os filtros aplicados, retorna 204 No Content sem gerar arquivo
+        List<String> listaTipos = (tipoContato != null && !tipoContato.trim().isEmpty())
+                ? Arrays.asList(tipoContato.trim().split(","))
+                : null;
+
+        List<String> listaUnidades = (unidade != null && !unidade.trim().isEmpty())
+                ? Arrays.asList(unidade.trim().split(","))
+                : null;
+
+        // 2. Chama a nova query enviando as listas
+        List<Contato> contatos = repository.findContatosParaRelatorio(
+                listaComarcas, listaMeios, listaTipos, listaUnidades
+        );
+
+        // Se não houver registros com os filtros aplicados...
         if (contatos.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             response.getWriter().write("Nenhum registro encontrado com os filtros informados.");
