@@ -121,35 +121,45 @@ public class ContatoController {
         return ResponseEntity.ok(repository.findDistinctUnidades());
     }
 
-    @PreAuthorize("hasAuthority('admin')")
-    @GetMapping("/contatos/relatorio/exportar")
+    // Classe DTO para receber o JSON do React
+    public static class FiltroRelatorioDTO {
+        private List<String> comarcas;
+        private List<String> unidades;
+        private List<String> meiosDeContato;
+        private List<String> tiposContato;
+
+        public List<String> getComarcas() { return comarcas; }
+        public void setComarcas(List<String> comarcas) { this.comarcas = comarcas; }
+        public List<String> getUnidades() { return unidades; }
+        public void setUnidades(List<String> unidades) { this.unidades = unidades; }
+        public List<String> getMeiosDeContato() { return meiosDeContato; }
+        public void setMeiosDeContato(List<String> meiosDeContato) { this.meiosDeContato = meiosDeContato; }
+        public List<String> getTiposContato() { return tiposContato; }
+        public void setTiposContato(List<String> tiposContato) { this.tiposContato = tiposContato; }
+    }
+
+    // @PreAuthorize("hasAuthority('admin')")
+    @PostMapping("/contatos/relatorio/exportar") // Mudamos de GetMapping para PostMapping
     public void exportarExcel(
-            @RequestParam(required = false) String comarca,
-            @RequestParam(required = false) String meioDeContato,
-            @RequestParam(required = false) String tipoContato,
-            @RequestParam(required = false) String unidade,
+            @RequestBody FiltroRelatorioDTO filtro, // Recebe o body via JSON
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
         auditLogService.mark(request, "EXPORT", "CONTATO", null, "Exportacao de relatorio em planilha Excel (.xlsx)");
 
-        // 1. Converte a string separada por vírgula em List.
-        // Se estiver vazia, passa o curinga `[""]` para satisfazer a Query no JPA.
-        List<String> listaComarcas = (comarca != null && !comarca.trim().isEmpty())
-                ? Arrays.asList(comarca.trim().toLowerCase().split(","))
-                : Arrays.asList("");
+        // 1. Pega as listas vindas do DTO.
+        // Se a lista estiver vazia/nula, passa o curinga Arrays.asList("") para satisfazer o JPA IN.
+        List<String> listaComarcas = (filtro.getComarcas() != null && !filtro.getComarcas().isEmpty())
+                ? filtro.getComarcas() : Arrays.asList("");
 
-        List<String> listaMeios = (meioDeContato != null && !meioDeContato.trim().isEmpty())
-                ? Arrays.asList(meioDeContato.trim().split(","))
-                : Arrays.asList("");
+        List<String> listaUnidades = (filtro.getUnidades() != null && !filtro.getUnidades().isEmpty())
+                ? filtro.getUnidades() : Arrays.asList("");
 
-        List<String> listaTipos = (tipoContato != null && !tipoContato.trim().isEmpty())
-                ? Arrays.asList(tipoContato.trim().split(","))
-                : Arrays.asList("");
+        List<String> listaMeios = (filtro.getMeiosDeContato() != null && !filtro.getMeiosDeContato().isEmpty())
+                ? filtro.getMeiosDeContato() : Arrays.asList("");
 
-        List<String> listaUnidades = (unidade != null && !unidade.trim().isEmpty())
-                ? Arrays.asList(unidade.trim().split(","))
-                : Arrays.asList("");
+        List<String> listaTipos = (filtro.getTiposContato() != null && !filtro.getTiposContato().isEmpty())
+                ? filtro.getTiposContato() : Arrays.asList("");
 
         // 2. Chama a query enviando as listas devidamente preparadas
         List<Contato> contatos = repository.findContatosParaRelatorio(
