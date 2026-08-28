@@ -34,6 +34,36 @@ Abaixo está a descrição das responsabilidades de cada camada estrutural do pr
 *   `application-hom.properties`: Configurações ativadas via `SPRING_PROFILES_ACTIVE=hom`. Focado no ambiente de homologação.
 *   `application-prod.properties`: Configurações ativadas via `SPRING_PROFILES_ACTIVE=prod`. Focado no ambiente da VM de produção.
 
+
+## 1.3 Dicionário de Dados (Estrutura das Tabelas no SGBD)
+
+O banco de dados relacional PostgreSQL possui a seguinte modelagem para as entidades principais do sistema:
+
+### Tabela: `contatos`
+Responsável por armazenar as informações físicas e lógicas de comunicação das unidades.
+
+| Coluna | Tipo de Dado | Restrição | Descrição / Regra de Negócio |
+| :--- | :--- | :--- | :--- |
+| `id` | Bigint / Serial | Primary Key | Identificador único e autoincremental do registro. |
+| `unidade` | Varchar(100) | Not Null | Nome do prédio ou secretaria (ex: FÓRUM CÍVEL). |
+| `setor` | Varchar(100) | Nullable | Nome da repartição interna (ex: 2ª VARA DA FAMÍLIA). |
+| `comarca` | Varchar(100) | Nullable | Nome do município (salvo em lowercase na memória). |
+| `meio_de_contato` | Varchar(50) | Nullable | Canal tecnológico (Valores: WHATSAPP, VOIP, TELEFONE, RAMAL). |
+| `tipo_contato` | Varchar(50) | Nullable | Tipo de engenharia da linha (Valores: FIXO, MOVEL). |
+| `telefone` | Varchar(30) | Not Null | Número de discagem ou string identificadora do ramal. |
+
+### Tabela: `usuarios`
+Responsável pelo controle de sessão e gerenciamento de permissões administrativas no sistema.
+
+| Coluna | Tipo de Dado | Restrição | Descrição / Regra de Negócio |
+| :--- | :--- | :--- | :--- |
+| `id` | Bigint / Serial | Primary Key | Identificador único do operador do sistema. |
+| `username` | Varchar(50) | Not Null / Unique | Login institucional do servidor, idêntico ao do Active Directory. |
+| `password` | Varchar(255) | Not Null | Hash de segurança (Injeta `{AD_AUTH}` para validação externa). |
+| `role` | Varchar(30) | Not Null | Nível de permissão técnica dentro do app (ex: `admin`, `user`). |
+| `active` | Boolean | Not Null | Flag de controle (true = usuário liberado; false = bloqueado). |
+| `ad_user` | Boolean | Not Null | Identificador de origem (true = autentica via AD do TJPI). |
+
 ---
 
 ## 2. Endpoints da API (Consumidos pelo Front-End)
