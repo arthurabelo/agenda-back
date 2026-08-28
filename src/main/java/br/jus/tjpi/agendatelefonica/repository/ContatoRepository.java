@@ -44,17 +44,14 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
 
     // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
     @Query("SELECT c FROM Contato c WHERE " +
-            "(:comarcas IS NULL OR LOWER(c.comarca) IN :comarcas) AND " +
-            "(:meiosDeContato IS NULL OR c.meioDeContato IN :meiosDeContato) AND " +
-            "(:tiposContato IS NULL OR c.tipoContato IN :tiposContato) AND " +
-            "(:unidades IS NULL OR c.unidade IN :unidades)")
+            "('' IN :comarcas OR LOWER(c.comarca) IN :comarcas) AND " +
+            "('' IN :meiosDeContato OR c.meioDeContato IN :meiosDeContato) AND " +
+            "('' IN :tiposContato OR c.tipoContato IN :tiposContato) AND " +
+            "('' IN :unidades OR c.unidade IN :unidades)")
     List<Contato> findContatosParaRelatorio(
             @Param("comarcas") List<String> comarcas,
             @Param("meiosDeContato") List<String> meiosDeContato,
             @Param("tiposContato") List<String> tiposContato,
             @Param("unidades") List<String> unidades
     );
-
-
-
 }

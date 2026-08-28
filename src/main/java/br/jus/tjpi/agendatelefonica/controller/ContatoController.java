@@ -133,30 +133,29 @@ public class ContatoController {
 
         auditLogService.mark(request, "EXPORT", "CONTATO", null, "Exportacao de relatorio em planilha Excel (.xlsx)");
 
-        // 1. Converte as strings delimitadas por vírgula em List<String>.
-        // Se a string vier vazia ou nula, passamos 'null' para a query ignorar a cláusula.
+        // 1. Converte a string separada por vírgula em List.
+        // Se estiver vazia, passa o curinga `[""]` para satisfazer a Query no JPA.
         List<String> listaComarcas = (comarca != null && !comarca.trim().isEmpty())
                 ? Arrays.asList(comarca.trim().toLowerCase().split(","))
-                : null;
+                : Arrays.asList("");
 
         List<String> listaMeios = (meioDeContato != null && !meioDeContato.trim().isEmpty())
                 ? Arrays.asList(meioDeContato.trim().split(","))
-                : null;
+                : Arrays.asList("");
 
         List<String> listaTipos = (tipoContato != null && !tipoContato.trim().isEmpty())
                 ? Arrays.asList(tipoContato.trim().split(","))
-                : null;
+                : Arrays.asList("");
 
         List<String> listaUnidades = (unidade != null && !unidade.trim().isEmpty())
                 ? Arrays.asList(unidade.trim().split(","))
-                : null;
+                : Arrays.asList("");
 
-        // 2. Chama a nova query enviando as listas
+        // 2. Chama a query enviando as listas devidamente preparadas
         List<Contato> contatos = repository.findContatosParaRelatorio(
                 listaComarcas, listaMeios, listaTipos, listaUnidades
         );
 
-        // Se não houver registros com os filtros aplicados...
         if (contatos.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             response.getWriter().write("Nenhum registro encontrado com os filtros informados.");
@@ -168,7 +167,7 @@ public class ContatoController {
 
             Row headerRow = sheet.createRow(0);
             String[] colunas = {"ID", "UNIDADE", "SETOR", "COMARCA", "ENDEREÇO", "LOCALIDADE", "MEIO DE CONTATO", "TIPO DE CONTATO", "TELEFONE"};
-            
+
             CellStyle headerStyle = workbook.createCellStyle();
             Font font = workbook.createFont();
             font.setBold(true);
