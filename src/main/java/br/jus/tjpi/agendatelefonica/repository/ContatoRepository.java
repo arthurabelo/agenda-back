@@ -44,10 +44,10 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
 
     // Uso da lista coringa ('') para evitar erro de sintaxe AST do Hibernate
     @Query("SELECT c FROM Contato c WHERE " +
-            "('' IN :comarcas OR LOWER(c.comarca) IN :comarcas) AND " +
-            "('' IN :meiosDeContato OR c.meioDeContato IN :meiosDeContato) AND " +
-            "('' IN :tiposContato OR c.tipoContato IN :tiposContato) AND " +
-            "('' IN :unidades OR c.unidade IN :unidades)")
+            "('' IN :comarcas OR UPPER(c.comarca) IN :comarcas) AND " +
+            "('' IN :meiosDeContato OR UPPER(c.meioDeContato) IN :meiosDeContato) AND " +
+            "('' IN :tiposContato OR UPPER(c.tipoContato) IN :tiposContato) AND " +
+            "('' IN :unidades OR UPPER(c.unidade) IN :unidades)")
     List<Contato> findContatosParaRelatorio(
             @Param("comarcas") List<String> comarcas,
             @Param("meiosDeContato") List<String> meiosDeContato,

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Arrays;
+import java.util.stream.Collectors; // <-- IMPORTANTE
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -112,25 +113,18 @@ public class ContatoController {
         return ResponseEntity.ok(contatos);
     }
 
-    // Agrupa unidades dentro das comarcas gerando um JSON Map
-    @GetMapping("/contatos/unidades-comarcas")
+    @GetMapping("/contatos/filtros-ativos")
     public ResponseEntity<Map<String, List<String>>> getFiltrosAtivos() {
         List<Object[]> resultados = repository.findComarcasEUnidades();
-
-        // Usa LinkedHashMap para manter a ordem alfabética já trazida da Query do BD
         Map<String, List<String>> mapaFiltros = new LinkedHashMap<>();
-
         for (Object[] linha : resultados) {
             String comarca = (String) linha[0];
             String unidade = (String) linha[1];
-
             mapaFiltros.computeIfAbsent(comarca, k -> new ArrayList<>()).add(unidade);
         }
-
         return ResponseEntity.ok(mapaFiltros);
     }
 
-    // Classe DTO para receber o JSON do React
     public static class FiltroRelatorioDTO {
         private List<String> comarcas;
         private List<String> unidades;
@@ -147,30 +141,36 @@ public class ContatoController {
         public void setTiposContato(List<String> tiposContato) { this.tiposContato = tiposContato; }
     }
 
-    // @PreAuthorize("hasAuthority('admin')")
-    @PostMapping("/contatos/relatorio/exportar") // Mudamos de GetMapping para PostMapping
+    @PreAuthorize("hasAuthority('admin')")
+    @PostMapping("/contatos/relatorio/exportar")
     public void exportarExcel(
-            @RequestBody FiltroRelatorioDTO filtro, // Recebe o body via JSON
+            @RequestBody FiltroRelatorioDTO filtro,
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
         auditLogService.mark(request, "EXPORT", "CONTATO", null, "Exportacao de relatorio em planilha Excel (.xlsx)");
 
-        // 1. Pega as listas vindas do DTO.
-        // Se a lista estiver vazia/nula, passa o curinga Arrays.asList("") para satisfazer o JPA IN.
-        List<String> listaComarcas = (filtro.getComarcas() != null && !filtro.getComarcas().isEmpty())
-                ? filtro.getComarcas() : Arrays.asList("");
+        // Garante que toda a consulta seja resolvida em UPPERCASE, protegendo a query
+        List<String> listaComarcas = Arrays.asList("");
+        if (filtro.getComarcas() != null && !filtro.getComarcas().isEmpty()) {
+            listaComarcas = filtro.getComarcas().stream().map(String::toUpperCase).collect(Collectors.toList());
+        }
 
-        List<String> listaUnidades = (filtro.getUnidades() != null && !filtro.getUnidades().isEmpty())
-                ? filtro.getUnidades() : Arrays.asList("");
+        List<String> listaUnidades = Arrays.asList("");
+        if (filtro.getUnidades() != null && !filtro.getUnidades().isEmpty()) {
+            listaUnidades = filtro.getUnidades().stream().map(String::toUpperCase).collect(Collectors.toList());
+        }
 
-        List<String> listaMeios = (filtro.getMeiosDeContato() != null && !filtro.getMeiosDeContato().isEmpty())
-                ? filtro.getMeiosDeContato() : Arrays.asList("");
+        List<String> listaMeios = Arrays.asList("");
+        if (filtro.getMeiosDeContato() != null && !filtro.getMeiosDeContato().isEmpty()) {
+            listaMeios = filtro.getMeiosDeContato().stream().map(String::toUpperCase).collect(Collectors.toList());
+        }
 
-        List<String> listaTipos = (filtro.getTiposContato() != null && !filtro.getTiposContato().isEmpty())
-                ? filtro.getTiposContato() : Arrays.asList("");
+        List<String> listaTipos = Arrays.asList("");
+        if (filtro.getTiposContato() != null && !filtro.getTiposContato().isEmpty()) {
+            listaTipos = filtro.getTiposContato().stream().map(String::toUpperCase).collect(Collectors.toList());
+        }
 
-        // 2. Chama a query enviando as listas devidamente preparadas
         List<Contato> contatos = repository.findContatosParaRelatorio(
                 listaComarcas, listaMeios, listaTipos, listaUnidades
         );
@@ -183,7 +183,6 @@ public class ContatoController {
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Contatos Filtrados");
-
             Row headerRow = sheet.createRow(0);
             String[] colunas = {"ID", "UNIDADE", "SETOR", "COMARCA", "ENDEREÇO", "LOCALIDADE", "MEIO DE CONTATO", "TIPO DE CONTATO", "TELEFONE"};
 
