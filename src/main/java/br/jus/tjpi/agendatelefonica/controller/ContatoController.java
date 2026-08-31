@@ -111,14 +111,22 @@ public class ContatoController {
         return ResponseEntity.ok(contatos);
     }
 
-    @GetMapping("/contatos/comarcas-ativas")
-    public ResponseEntity<List<String>> getComarcasAtivas() {
-        return ResponseEntity.ok(repository.findDistinctComarcas());
-    }
+    // Agrupa unidades dentro das comarcas gerando um JSON Map
+    @GetMapping("/contatos/unidades-comarcas")
+    public ResponseEntity<Map<String, List<String>>> getFiltrosAtivos() {
+        List<Object[]> resultados = repository.findComarcasEUnidades();
 
-    @GetMapping("/contatos/unidades-ativas")
-    public ResponseEntity<List<String>> getUnidadesAtivas() {
-        return ResponseEntity.ok(repository.findDistinctUnidades());
+        // Usa LinkedHashMap para manter a ordem alfabética já trazida da Query do BD
+        Map<String, List<String>> mapaFiltros = new LinkedHashMap<>();
+
+        for (Object[] linha : resultados) {
+            String comarca = (String) linha[0];
+            String unidade = (String) linha[1];
+
+            mapaFiltros.computeIfAbsent(comarca, k -> new ArrayList<>()).add(unidade);
+        }
+
+        return ResponseEntity.ok(mapaFiltros);
     }
 
     // Classe DTO para receber o JSON do React
