@@ -1,10 +1,10 @@
 # Agenda TJPI • Back-End (Spring Boot)
 
-### Link da API (Homologação)
-https://tjpi.jus.br
+### Link do Projeto(Aplicação)
+https://contatos-hom.tjpi.jus.br/
 
 ### Link do Projeto (GitLab)
-https://tjpi.jus.br
+https://gitlab.tjpi.jus.br/infraestrutura/agenda-back
 
 ### Descrição
 O **Back-End da Agenda TJPI** é uma API RESTful de alta performance desenvolvida em Java com o framework Spring Boot. O sistema utiliza o **PostgreSQL como SGBD (Sistema Gerenciador de Banco de Dados)** oficial para o armazenamento e consistência dos registros. 
