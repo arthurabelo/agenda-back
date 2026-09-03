@@ -9,48 +9,50 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface ContatoRepository  extends JpaRepository<Contato, Long> {
-    
+
     List<Contato> findByUnidadeContainingIgnoreCase(String unidade);
 
     List<Contato> findBySetorContainingIgnoreCase(String setor);
 
     List<Contato> findByComarcaContainingIgnoreCase(String comarca);
-    
+
     List<Contato> findByLocalidadeContainingIgnoreCase(String localidade);
 
     List<Contato> findByTelefoneContainingIgnoreCase(String telefone);
-    
-    @Query("SELECT c FROM Contato c WHERE " +
-       "(:termo IS NULL OR (" +
-       "LOWER(c.unidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-       "LOWER(c.setor) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-       "LOWER(c.localidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-       "LOWER(c.comarca) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-       "LOWER(c.endereco) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-       "LOWER(c.telefone) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-       "LOWER(c.tipoContato) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-       "LOWER(c.meioDeContato) LIKE LOWER(CONCAT('%', :termo, '%'))" +
-       "))"
-    )
-    Page<Contato> findByFiltroGlobal(@Param("termo") String termo, Pageable pageable);
-    
-    // Busca somente os valores necessários para os filtros. A normalização também
-    // elimina espaços acidentais e evita que variações de maiúsculas gerem duplicatas.
-    @Query("SELECT DISTINCT UPPER(TRIM(c.comarca)), UPPER(TRIM(c.unidade)) FROM Contato c " +
-            "WHERE c.comarca IS NOT NULL AND TRIM(c.comarca) <> '' " +
-            "AND c.unidade IS NOT NULL AND TRIM(c.unidade) <> '' " +
-            "ORDER BY UPPER(TRIM(c.comarca)), UPPER(TRIM(c.unidade))")
-    List<Object[]> findComarcasEUnidades();
 
     @Query("SELECT c FROM Contato c WHERE " +
-            "('' IN :comarcas OR UPPER(c.comarca) IN :comarcas) AND " +
-            "('' IN :meiosDeContato OR UPPER(c.meioDeContato) IN :meiosDeContato) AND " +
-            "('' IN :tiposContato OR UPPER(c.tipoContato) IN :tiposContato) AND " +
-            "('' IN :unidades OR UPPER(c.unidade) IN :unidades)")
+            "(:termo IS NULL OR (" +
+            "LOWER(c.unidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(c.setor) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(c.localidade) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(c.comarca) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(c.endereco) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(c.telefone) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(c.tipoContato) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(c.meioDeContato) LIKE LOWER(CONCAT('%', :termo, '%'))" +
+            "))"
+    )
+    Page<Contato> findByFiltroGlobal(@Param("termo") String termo, Pageable pageable);
+
+
+    // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
+    @Query("SELECT DISTINCT LOWER(c.comarca) FROM Contato c WHERE c.comarca IS NOT NULL ORDER BY LOWER(c.comarca) ASC")
+    List<String> findDistinctComarcas();
+
+
+    // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
+    @Query("SELECT c FROM Contato c WHERE " +
+            "(:comarca IS NULL OR c.comarca = :comarca) AND " +
+            "(:meioDeContato IS NULL OR c.meioDeContato = :meioDeContato) AND " +
+            "(:tipoContato IS NULL OR c.tipoContato = :tipoContato) AND " +
+            "(:unidade IS NULL OR LOWER(c.unidade) LIKE :unidade)")
     List<Contato> findContatosParaRelatorio(
-            @Param("comarcas") List<String> comarcas,
-            @Param("meiosDeContato") List<String> meiosDeContato,
-            @Param("tiposContato") List<String> tiposContato,
-            @Param("unidades") List<String> unidades
+            @Param("comarca") String comarca,
+            @Param("meioDeContato") String meioDeContato,
+            @Param("tipoContato") String tipoContato,
+            @Param("unidade") String unidade
     );
+
+
+
 }
