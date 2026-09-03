@@ -35,26 +35,23 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
     Page<Contato> findByFiltroGlobal(@Param("termo") String termo, Pageable pageable);
 
 
-    // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
-   @Query("SELECT DISTINCT LOWER(c.comarca) FROM Contato c WHERE c.comarca IS NOT NULL ORDER BY LOWER(c.comarca) ASC")
-    List<String> findDistinctComarcas();
+    // Retorna uma lista de Arrays contendo [Comarca, Unidade] agrupadas e ordenadas
+    @Query("SELECT DISTINCT UPPER(c.comarca), UPPER(c.unidade) FROM Contato c " +
+            "WHERE c.comarca IS NOT NULL AND c.comarca <> '' " +
+            "AND c.unidade IS NOT NULL AND c.unidade <> '' " +
+            "ORDER BY UPPER(c.comarca) ASC, UPPER(c.unidade) ASC")
+    List<Object[]> findComarcasEUnidades();
 
-    @Query("SELECT DISTINCT c.unidade FROM Contato c WHERE c.unidade IS NOT NULL AND c.unidade <> '' ORDER BY c.unidade ASC")
-    List<String> findDistinctUnidades();
-
-    // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
+    // Uso da lista coringa ('') para evitar erro de sintaxe AST do Hibernate
     @Query("SELECT c FROM Contato c WHERE " +
-            "(:comarcas IS NULL OR LOWER(c.comarca) IN :comarcas) AND " +
-            "(:meiosDeContato IS NULL OR c.meioDeContato IN :meiosDeContato) AND " +
-            "(:tiposContato IS NULL OR c.tipoContato IN :tiposContato) AND " +
-            "(:unidades IS NULL OR c.unidade IN :unidades)")
+            "('' IN :comarcas OR UPPER(c.comarca) IN :comarcas) AND " +
+            "('' IN :meiosDeContato OR UPPER(c.meioDeContato) IN :meiosDeContato) AND " +
+            "('' IN :tiposContato OR UPPER(c.tipoContato) IN :tiposContato) AND " +
+            "('' IN :unidades OR UPPER(c.unidade) IN :unidades)")
     List<Contato> findContatosParaRelatorio(
             @Param("comarcas") List<String> comarcas,
             @Param("meiosDeContato") List<String> meiosDeContato,
             @Param("tiposContato") List<String> tiposContato,
             @Param("unidades") List<String> unidades
     );
-
-
-
 }

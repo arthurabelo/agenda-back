@@ -1,9 +1,11 @@
 package br.jus.tjpi.agendatelefonica.controller;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Arrays;
+import java.util.stream.Collectors; // <-- IMPORTANTE
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -111,52 +113,68 @@ public class ContatoController {
         return ResponseEntity.ok(contatos);
     }
 
-    @GetMapping("/contatos/comarcas-ativas")
-    public ResponseEntity<List<String>> getComarcasAtivas() {
-        return ResponseEntity.ok(repository.findDistinctComarcas());
+    @GetMapping("/contatos/filtros-ativos")
+    public ResponseEntity<Map<String, List<String>>> getFiltrosAtivos() {
+        List<Object[]> resultados = repository.findComarcasEUnidades();
+        Map<String, List<String>> mapaFiltros = new LinkedHashMap<>();
+        for (Object[] linha : resultados) {
+            String comarca = (String) linha[0];
+            String unidade = (String) linha[1];
+            mapaFiltros.computeIfAbsent(comarca, k -> new ArrayList<>()).add(unidade);
+        }
+        return ResponseEntity.ok(mapaFiltros);
     }
 
-    @GetMapping("/contatos/unidades-ativas")
-    public ResponseEntity<List<String>> getUnidadesAtivas() {
-        return ResponseEntity.ok(repository.findDistinctUnidades());
+    public static class FiltroRelatorioDTO {
+        private List<String> comarcas;
+        private List<String> unidades;
+        private List<String> meiosDeContato;
+        private List<String> tiposContato;
+
+        public List<String> getComarcas() { return comarcas; }
+        public void setComarcas(List<String> comarcas) { this.comarcas = comarcas; }
+        public List<String> getUnidades() { return unidades; }
+        public void setUnidades(List<String> unidades) { this.unidades = unidades; }
+        public List<String> getMeiosDeContato() { return meiosDeContato; }
+        public void setMeiosDeContato(List<String> meiosDeContato) { this.meiosDeContato = meiosDeContato; }
+        public List<String> getTiposContato() { return tiposContato; }
+        public void setTiposContato(List<String> tiposContato) { this.tiposContato = tiposContato; }
     }
 
     @PreAuthorize("hasAuthority('admin')")
-    @GetMapping("/contatos/relatorio/exportar")
+    @PostMapping("/contatos/relatorio/exportar")
     public void exportarExcel(
-            @RequestParam(required = false) String comarca,
-            @RequestParam(required = false) String meioDeContato,
-            @RequestParam(required = false) String tipoContato,
-            @RequestParam(required = false) String unidade,
+            @RequestBody FiltroRelatorioDTO filtro,
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
         auditLogService.mark(request, "EXPORT", "CONTATO", null, "Exportacao de relatorio em planilha Excel (.xlsx)");
 
-        // 1. Converte as strings delimitadas por vírgula em List<String>.
-        // Se a string vier vazia ou nula, passamos 'null' para a query ignorar a cláusula.
-        List<String> listaComarcas = (comarca != null && !comarca.trim().isEmpty())
-                ? Arrays.asList(comarca.trim().toLowerCase().split(","))
-                : null;
+        // Garante que toda a consulta seja resolvida em UPPERCASE, protegendo a query
+        List<String> listaComarcas = Arrays.asList("");
+        if (filtro.getComarcas() != null && !filtro.getComarcas().isEmpty()) {
+            listaComarcas = filtro.getComarcas().stream().map(String::toUpperCase).collect(Collectors.toList());
+        }
 
-        List<String> listaMeios = (meioDeContato != null && !meioDeContato.trim().isEmpty())
-                ? Arrays.asList(meioDeContato.trim().split(","))
-                : null;
+        List<String> listaUnidades = Arrays.asList("");
+        if (filtro.getUnidades() != null && !filtro.getUnidades().isEmpty()) {
+            listaUnidades = filtro.getUnidades().stream().map(String::toUpperCase).collect(Collectors.toList());
+        }
 
-        List<String> listaTipos = (tipoContato != null && !tipoContato.trim().isEmpty())
-                ? Arrays.asList(tipoContato.trim().split(","))
-                : null;
+        List<String> listaMeios = Arrays.asList("");
+        if (filtro.getMeiosDeContato() != null && !filtro.getMeiosDeContato().isEmpty()) {
+            listaMeios = filtro.getMeiosDeContato().stream().map(String::toUpperCase).collect(Collectors.toList());
+        }
 
-        List<String> listaUnidades = (unidade != null && !unidade.trim().isEmpty())
-                ? Arrays.asList(unidade.trim().split(","))
-                : null;
+        List<String> listaTipos = Arrays.asList("");
+        if (filtro.getTiposContato() != null && !filtro.getTiposContato().isEmpty()) {
+            listaTipos = filtro.getTiposContato().stream().map(String::toUpperCase).collect(Collectors.toList());
+        }
 
-        // 2. Chama a nova query enviando as listas
         List<Contato> contatos = repository.findContatosParaRelatorio(
                 listaComarcas, listaMeios, listaTipos, listaUnidades
         );
 
-        // Se não houver registros com os filtros aplicados...
         if (contatos.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             response.getWriter().write("Nenhum registro encontrado com os filtros informados.");
@@ -165,10 +183,9 @@ public class ContatoController {
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Contatos Filtrados");
-
             Row headerRow = sheet.createRow(0);
             String[] colunas = {"ID", "UNIDADE", "SETOR", "COMARCA", "ENDEREÇO", "LOCALIDADE", "MEIO DE CONTATO", "TIPO DE CONTATO", "TELEFONE"};
-            
+
             CellStyle headerStyle = workbook.createCellStyle();
             Font font = workbook.createFont();
             font.setBold(true);
