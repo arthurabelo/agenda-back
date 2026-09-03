@@ -1,7 +1,7 @@
 services:
   app:
     build:
-      context: agenda-back
+      context: .
       dockerfile: Dockerfile
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-agenda_db}
@@ -21,7 +21,7 @@ services:
   app-test:
     profiles: ["test"]
     build:
-      context: agenda-back
+      context: .
       dockerfile: Dockerfile
     environment:
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005
