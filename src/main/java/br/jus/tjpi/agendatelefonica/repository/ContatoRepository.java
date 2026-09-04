@@ -39,18 +39,25 @@ public interface ContatoRepository  extends JpaRepository<Contato, Long> {
     @Query("SELECT DISTINCT LOWER(c.comarca) FROM Contato c WHERE c.comarca IS NOT NULL ORDER BY LOWER(c.comarca) ASC")
     List<String> findDistinctComarcas();
 
+    // Retorna pares distintos [comarca, unidade] em CAIXA ALTA, filtrando nulos/vazios, ordenados asc
+    @Query("SELECT DISTINCT UPPER(c.comarca), UPPER(c.unidade) FROM Contato c WHERE " +
+           "(c.comarca IS NOT NULL AND TRIM(c.comarca) <> '') AND " +
+           "(c.unidade IS NOT NULL AND TRIM(c.unidade) <> '') " +
+           "ORDER BY UPPER(c.comarca) ASC, UPPER(c.unidade) ASC")
+    List<Object[]> findComarcasEUnidades();
 
-    // Query do Relatório com filtros condicionais (Se o parâmetro for nulo, o Spring ignora ele)
+    // Query do Relatório com filtros multi-seleção (listas). Usa string vazia curinga para
+    // evitar AST Exception do Hibernate quando a lista estiver vazia.
     @Query("SELECT c FROM Contato c WHERE " +
-            "(:comarca IS NULL OR c.comarca = :comarca) AND " +
-            "(:meioDeContato IS NULL OR c.meioDeContato = :meioDeContato) AND " +
-            "(:tipoContato IS NULL OR c.tipoContato = :tipoContato) AND " +
-            "(:unidade IS NULL OR LOWER(c.unidade) LIKE :unidade)")
+           "('' IN :comarcas OR UPPER(c.comarca) IN :comarcas) AND " +
+           "('' IN :meiosDeContato OR UPPER(c.meioDeContato) IN :meiosDeContato) AND " +
+           "('' IN :tiposContato OR UPPER(c.tipoContato) IN :tiposContato) AND " +
+           "('' IN :unidades OR UPPER(c.unidade) IN :unidades)")
     List<Contato> findContatosParaRelatorio(
-            @Param("comarca") String comarca,
-            @Param("meioDeContato") String meioDeContato,
-            @Param("tipoContato") String tipoContato,
-            @Param("unidade") String unidade
+            @Param("comarcas") List<String> comarcas,
+            @Param("meiosDeContato") List<String> meiosDeContato,
+            @Param("tiposContato") List<String> tiposContato,
+            @Param("unidades") List<String> unidades
     );
 
 

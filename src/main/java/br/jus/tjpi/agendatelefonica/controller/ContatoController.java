@@ -1,6 +1,8 @@
 package br.jus.tjpi.agendatelefonica.controller;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,28 +117,39 @@ public class ContatoController {
         return ResponseEntity.ok(repository.findDistinctComarcas());
     }
 
-    //@PreAuthorize("hasAuthority('admin')")
-    @GetMapping("/contatos/relatorio/exportar")
+    @GetMapping("/contatos/filtros")
+    public ResponseEntity<Map<String, List<String>>> getFiltros() {
+        List<Object[]> pares = repository.findComarcasEUnidades();
+        Map<String, List<String>> filtros = new LinkedHashMap<>();
+
+        for (Object[] par : pares) {
+            String comarca = (String) par[0];
+            String unidade = (String) par[1];
+            filtros.computeIfAbsent(comarca, k -> new ArrayList<>()).add(unidade);
+        }
+
+        return ResponseEntity.ok(filtros);
+    }
+
+    @PostMapping("/contatos/relatorio/exportar")
     public void exportarExcel(
-            @RequestParam(required = false) String comarca,
-            @RequestParam(required = false) String meioDeContato,
-            @RequestParam(required = false) String tipoContato,
-            @RequestParam(required = false) String unidade,
+            @RequestBody FiltroRelatorioDTO filtro,
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
         auditLogService.mark(request, "EXPORT", "CONTATO", null, "Exportacao de relatorio em planilha Excel (.xlsx)");
 
-        // Trata os filtros opcionais diretamente no Java para não quebrar o banco
-        String filtroComarca = (comarca != null && !comarca.trim().isEmpty()) ? comarca.trim().toLowerCase() : null;
-        String filtroMeio = (meioDeContato != null && !meioDeContato.trim().isEmpty()) ? meioDeContato.trim() : null;
-        String filtroTipo = (tipoContato != null && !tipoContato.trim().isEmpty()) ? tipoContato.trim() : null;
+        List<String> comarcas = normalizarLista(filtro.getComarcas());
+        List<String> unidades = normalizarLista(filtro.getUnidades());
+        List<String> meiosDeContato = normalizarLista(filtro.getMeiosDeContato());
+        List<String> tiposContato = normalizarLista(filtro.getTiposContato());
 
-        // Faz a concatenação do LIKE (%) diretamente no Java, evitando o bug do bytea
-        String filtroUnidade = (unidade != null && !unidade.trim().isEmpty()) ? "%" + unidade.trim().toLowerCase() + "%" : null;
+        List<Contato> contatos = repository.findContatosParaRelatorio(comarcas, meiosDeContato, tiposContato, unidades);
 
-        List<Contato> contatos = repository.findContatosParaRelatorio(filtroComarca, filtroMeio, filtroTipo, filtroUnidade);
-
+        if (contatos.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return;
+        }
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Contatos Filtrados");
@@ -178,6 +191,36 @@ public class ContatoController {
 
             workbook.write(response.getOutputStream());
         }
+    }
+
+    public static class FiltroRelatorioDTO {
+        private List<String> comarcas;
+        private List<String> unidades;
+        private List<String> meiosDeContato;
+        private List<String> tiposContato;
+
+        public List<String> getComarcas() { return comarcas; }
+        public void setComarcas(List<String> comarcas) { this.comarcas = comarcas; }
+
+        public List<String> getUnidades() { return unidades; }
+        public void setUnidades(List<String> unidades) { this.unidades = unidades; }
+
+        public List<String> getMeiosDeContato() { return meiosDeContato; }
+        public void setMeiosDeContato(List<String> meiosDeContato) { this.meiosDeContato = meiosDeContato; }
+
+        public List<String> getTiposContato() { return tiposContato; }
+        public void setTiposContato(List<String> tiposContato) { this.tiposContato = tiposContato; }
+    }
+
+    private List<String> normalizarLista(List<String> lista) {
+        if (lista == null || lista.isEmpty()) {
+            return Arrays.asList("");
+        }
+        List<String> normalizada = new ArrayList<>();
+        for (String item : lista) {
+            normalizada.add(item.toUpperCase());
+        }
+        return normalizada;
     }
 
     private Map<String, Object> snapshot(Contato contato) {
