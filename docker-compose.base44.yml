@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: agenda_db
+      POSTGRES_USER: agenda
+      POSTGRES_PASSWORD: agenda_dev_password
+    volumes:
+      - base44_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agenda -d agenda_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    image: maven:3.9.14-eclipse-temurin-25
+    working_dir: /workspace
+    command: mvn -B spring-boot:run -Dspring-boot.run.addResources=true
+    volumes:
+      - .:/workspace
+      - base44_maven_cache:/root/.m2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agenda_db
+      SPRING_DATASOURCE_USERNAME: agenda
+      SPRING_DATASOURCE_PASSWORD: agenda_dev_password
+      AD_SERVER_URL: ldap://localhost:389
+      AD_DOMAIN: local.invalid
+      AD_UPN_SUFFIX: local.invalid
+      AD_BASE_DN: dc=local,dc=invalid
+      AD_LOGIN_GROUP: ""
+    ports:
+      - "3000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  base44_postgres_data:
+  base44_maven_cache:
